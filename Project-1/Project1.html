@@ -1,0 +1,78 @@
+<html>
+
+    <head>
+        <title>Basic Particle System</title>
+
+        <script>
+            var canvasRef;
+            var sceneList = [];
+            var currentFrameNumber = 0;
+
+            function display(callback){
+                callback();
+            }
+            function init(){
+                console.log("Hello World");
+                canvasRef = document.getElementById("myCanvas");
+                updateAndDraw();
+            }
+            //Function declaration for Rectangle Object.
+            function Rectangle(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.velocity = {x:0, y:0};
+                sceneList.push(this);
+            }
+            RectanglePrototype = {
+                update: function() {
+                    this.velocity.y++;
+                    this.y += (this.velocity.y * 0.16);
+                },
+                draw: function() {
+                    var canvasContext = canvasRef.getContext("2d");
+                    canvasContext.fillStyle = this.color;
+                    canvasContext.fillRect(this.x, this.y, 50, 50);
+                    canvasContext.strokeRect(this.x, this.y, 50, 50);
+                }
+            };
+            Rectangle.prototype = RectanglePrototype;
+
+            function updateAndDraw(){
+                canvasRef.getContext("2d").clearRect(0, 0, 300, 200);
+                var x = canvasRef.offsetWidth * Math.random();
+                var y = canvasRef.offsetHeight * Math.random();
+                var newRectangleInstance = new Rectangle(x, y, "#" + Math.floor(Math.random()*16777215).toString(16));
+
+                currentFrameNumber++;
+                for (var r = 0; r < sceneList.length; r++) {
+                    if (sceneList[r].y > canvasRef.offsetHeight) {
+                        sceneList.splice(r, 1);
+                        continue;
+                    }
+                    sceneList[r].draw();
+                    sceneList[r].update();
+                }
+                console.log(currentFrameNumber);
+                requestAnimationFrame(updateAndDraw);
+                updateStats();
+            }
+            function updateStats() {
+                var p = document.getElementById("frameCount");
+                p.innerText = "Frame Count: " + currentFrameNumber;
+
+                var p = document.getElementById("rectangleCount");
+                p.innerText = "Rectangle Count: " + sceneList.length;
+            }
+        </script>
+
+    </head>
+
+    <body onload="display(init)">
+    <h1>Project 1: Basic Particle System</h1>
+    <canvas id = "myCanvas" width="300" height="200" style="border:1px solid rgb(0, 0, 0);"></canvas>
+    <p id = "frameCount">Frame Count: 0</p>
+    <p id = "rectangleCount">Rectangle Count: 0</p>
+    </body>
+
+</html>
