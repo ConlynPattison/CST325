@@ -1,0 +1,175 @@
+<html>
+
+    <head>
+        <title>Basic Particle System</title>
+
+        <script>
+            var canvasRef;
+            var sceneList = [];
+            var currentFrameNumber = 0;
+            var currentColor = "rgb(255,100,100)";
+            var red = 255, green = 100, blue = 100;
+            var spectrumRate = 5;
+            var decayAccel = 0.5;
+            var rectSize = 50;
+
+            function display(callback){
+                callback();
+            }
+            function init(){
+                console.log("Hello World");
+                canvasRef = document.getElementById("myCanvas");
+                updateAndDraw();
+            }
+            //Function declaration for Rectangle Object.
+            function Rectangle(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.width = rectSize;
+                this.length = rectSize;
+                this.velocity = {x:-5, y:-5};
+                this.velocityRandom = {x:(Math.random() - 0.5) * 5, y: (Math.random() - 0.5) * 5};
+                sceneList.push(this);
+            }
+            RectanglePrototype = {
+                update: function() {
+                    this.velocity.y += decayAccel;
+                    this.velocity.x += decayAccel;
+                    var previousWidth = this.width;
+                    var previousLength = this.length;
+                    this.width -= (this.velocity.x * 0.16);
+                    this.length -= (this.velocity.y * 0.16);
+                    this.x += (previousWidth - this.width) * 0.5;
+                    this.y += (previousLength - this.length) * 0.5;
+                    this.x += this.velocityRandom.x;
+                    this.y += this.velocityRandom.y;
+                    checkPosition(this);
+                    
+                },
+                draw: function() {
+                    var canvasContext = canvasRef.getContext("2d");
+                    canvasContext.fillStyle = this.color;
+                    canvasContext.fillRect(this.x, this.y, this.width, this.length);
+                    canvasContext.strokeRect(this.x, this.y, this.width, this.length);
+                }
+            };
+            Rectangle.prototype = RectanglePrototype;
+
+            function updateAndDraw(){
+                canvasRef.getContext("2d").clearRect(0, 0, 600, 400);
+                var x = (canvasRef.offsetWidth - rectSize - 3) * Math.random();
+                var y = (canvasRef.offsetHeight - rectSize - 3)* Math.random();
+                var newRectangleInstance = new Rectangle(x, y, currentColor);
+                currentFrameNumber++;
+                spectrum();
+
+                // Free memory if rect object is small enough.
+                for (var r = 0; r < sceneList.length; r++) {
+                    if (sceneList[r].width < 1) {
+                        sceneList.splice(r, 1);
+                        continue;
+                    }
+                    sceneList[r].draw();
+                    sceneList[r].update();
+                }
+                    console.log(currentFrameNumber);
+                    requestAnimationFrame(updateAndDraw);
+                    updateStats();
+            }
+            function updateStats() {
+                var p = document.getElementById("frameCount");
+                p.innerText = "Frame Count: " + currentFrameNumber;
+
+                var p = document.getElementById("rectangleCount");
+                p.innerText = "Rectangle Count: " + sceneList.length;
+            }
+
+            // Check if object is colliding with the border, if so, alter trajectory
+            function checkPosition(thisRectangle) {
+                if ((thisRectangle.x + thisRectangle.width >= canvasRef.offsetWidth) || (thisRectangle.x <= 0)) {
+                    thisRectangle.velocityRandom.x *=-1;
+                }
+                if ((thisRectangle.y + thisRectangle.length >= canvasRef.offsetHeight) || (thisRectangle.y <= 0)) {
+                    thisRectangle.velocityRandom.y *= -1;
+                }
+            }
+
+            // Gradually change currentColor at rate of spectrumRate every frame
+            function spectrum() {
+                var maxColor = 255;
+                var minColor = 100;
+                if (red == maxColor && green < maxColor && blue == minColor) {
+                    green+=spectrumRate;
+                    if (green > maxColor) {
+                        green = maxColor;
+                    }
+                } else if (red > minColor && green == maxColor && blue == minColor) {
+                    red-=spectrumRate;
+                    if (red < minColor) {
+                        red = minColor;
+                    }
+                } else if (red == minColor && green == maxColor && blue < maxColor) {
+                    blue+=spectrumRate;
+                    if (blue > maxColor) {
+                        blue = maxColor;
+                    }
+                } else if (red == minColor && green > minColor && blue == maxColor) {
+                    green-=spectrumRate;
+                    if (green < minColor) {
+                        green = minColor;
+                    }
+                } else if (red < maxColor && green == minColor && blue == maxColor) {
+                    red+=spectrumRate;
+                    if (red > maxColor) {
+                        red = maxColor;
+                    }
+                } else if (red == maxColor && green == minColor && blue > minColor) {
+                    blue-=spectrumRate;
+                    if (blue < minColor) {
+                        blue = minColor;
+                    }
+                }
+                currentColor = "#" + red.toString(16).padStart(2, '0') + green.toString(16).padStart(2, '0') + blue.toString(16).padStart(2, '0');
+            }
+            // User onclick func for changing rate of color change
+            function changeSpectrum(difference) {
+                if ((spectrumRate + difference) < 1) {
+                    return;
+                } else {
+                    spectrumRate += difference;
+                    var p = document.getElementById("spectrumRate");
+                    p.innerText = "Color Rate: " + spectrumRate;
+                }
+            }
+
+            // Allows for change of the rate the rect objects shrink; will not allow for infinite growth
+            function changeDecay(difference) {
+                if((decayAccel + difference) < 0.05) {
+                    return;
+                } else {
+                    decayAccel += difference;
+                    var p = document.getElementById("decayAccel");
+                    p.innerText = "Decay Rate: " + decayAccel.toPrecision(3);
+                }
+            }
+        </script>
+
+    </head>
+
+    <body onload="display(init)">
+    <h1>Project 1: Extra Credit</h1>
+    <canvas id = "myCanvas" width="600" height="400" style="border:1px solid rgb(0, 0, 0);"></canvas>
+    <br><br>
+    <button onclick="changeDecay(0.05)">Faster Decay</button>
+    <button onclick="changeDecay(-0.05)">Slower Decay</button>
+    <br><br>
+    <button onclick="changeSpectrum(1)">Faster Colors</button>
+    <button onclick="changeSpectrum(-1)">Slower Colors</button>
+    <p id = "decayAccel">Decay Rate: 0.5</p>
+    <p id = "spectrumRate">Color Rate: 5</p>
+    <p id = "frameCount">Frame Count: 0</p>
+    <p id = "rectangleCount">Rectangle Count: 0</p>
+    </body>
+
+</html>
