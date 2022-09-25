@@ -41,20 +41,9 @@ var fov = 45;   // if this changes, your code should still work
 var fovRadians = fov * (Math.PI / 180);
 
 var pixelWidth = 2 / pixelsAcross;
-var pixelHalfWidth = pixelWidth / 2;
 
 // How far away (scalar) the eye is from the image plane (see project guide for more info)
-var eyeDistance = 1 / (Math.tan(fovRadians / 2)); // = todo -> hint: related to tangent and field of view
-// -----------
-// |         /
-// |        /
-// |       /
-// | 45/2 /      <---- half angle
-// |     /
-// |    /
-// |   /
-// |  /
-// | /
+var eyeDistance = 1 / (Math.tan(fovRadians / 2));
 
 // important vectors
 var eyeCoordinate = new Vector3(0, 0, eyeDistance); // all of your rays will use this
@@ -77,13 +66,20 @@ var backWall = new Plane(new Vector3(0,0,1), new Vector3(0,0,-1));
 
 var scene = [sphere, floor, leftWall, rightWall, ceiling, backWall];
 
+// Antialiasing sample offsets [x1,x2,...,xn]
+var aX = [0.3333,0.8333,0.6667,0.1667];
+// [y1,y2,...,yn]
+var aY = [0.3333,0.8333,0.6667,0.1667];
+var pixelOffsetX;
+var pixelOffsetY;
+
 // end of raytracer setup ******************************************************
 
 // -----------------------------------------------------------------------------
 // return a ray that goes from the eye point through the pixel at index (xPixelIndex, yPixelIndex)
 function generateRayForPixel(xPixelIndex, yPixelIndex) {
-	var pixelX = -1 + pixelHalfWidth + pixelWidth * xPixelIndex;
-	var pixelY = 1 - pixelHalfWidth - pixelWidth * yPixelIndex;
+	var pixelX = -1 + (pixelOffsetX * pixelWidth) + pixelWidth * xPixelIndex;
+	var pixelY = 1 - (pixelOffsetY * pixelWidth) - pixelWidth * yPixelIndex;
 	var pixelCoordinate = new Vector3(pixelX, pixelY, 0);
 
 	var direction = pixelCoordinate.clone().subtract(eyeCoordinate);
@@ -114,51 +110,48 @@ function updateAndRender(timeElapsed) {
 	// last time you call it will be the color and overwrite previous calls.
 	for (var yPixelIndex = 0; yPixelIndex < pixelsDown; ++yPixelIndex) {
 		for (var xPixelIndex = 0; xPixelIndex < pixelsAcross; ++xPixelIndex) {
+			var colorVec = new Vector3(0,0,0);
+			for (var offsetAA = 0; offsetAA < aX.length; offsetAA++) {
+				pixelOffsetX = aX[offsetAA];
+				pixelOffsetY = aY[offsetAA];
+				var pixelRay = generateRayForPixel(xPixelIndex, yPixelIndex);
 
-			// Uncomment this once you've coded generateRayForPixel
-			var pixelRay = generateRayForPixel(xPixelIndex, yPixelIndex);
-
-			// See if the ray intersects with every object in our scene (hold the closest obj)
-			// Uncomment when your sphere or plane code is ready
-			var closestGeo = {hit : false, distance : null};
-			var geoID = -1;
-			for (var geo = 0; geo < scene.length; geo++) {
-				var castResult = {hit : false};
-				castResult = scene[geo].raycast(pixelRay)
-				if (castResult.hit) {
-					if ((castResult.distance < closestGeo.distance) || closestGeo.distance == null) {
-						closestGeo = castResult;
-						geoID = geo;
+				// See if the ray intersects with every object in our scene (hold the closest obj)
+				var closestGeo = {hit : false, distance : null};
+				var geoID = -1;
+				for (var geo = 0; geo < scene.length; geo++) {
+					var castResult = {hit : false};
+					castResult = scene[geo].raycast(pixelRay)
+					if (castResult.hit) {
+						if ((castResult.distance < closestGeo.distance) || closestGeo.distance == null) {
+							closestGeo = castResult;
+							geoID = geo;
+						}
 					}
 				}
-			}
 
-			var isShadowPlane = false;
-			if (closestGeo.hit) {
-				var geoDotLight = closestGeo.normal.clone().dot((light.clone().subtract(closestGeo.point)).normalize());
-				var geoToLight = new Ray(closestGeo.point, light.clone().subtract(closestGeo.point));
-				for (var geo = 0; geo < scene.length; geo++) {
-					if (geo != geoID) {
-						var closestToOther = scene[geo].raycast(geoToLight)
-						if (closestToOther.hit) {
-							if ((closestToOther.distance) < (light.clone().subtract(closestGeo.point)).length()) {
-								isShadowPlane = true;
-								break;
+				var isShadowPlane = false;
+				if (closestGeo.hit) {
+					var geoDotLight = closestGeo.normal.clone().dot((light.clone().subtract(closestGeo.point)).normalize());
+					var geoToLight = new Ray(closestGeo.point, light.clone().subtract(closestGeo.point));
+					for (var geo = 0; geo < scene.length; geo++) {
+						if (geo != geoID) {
+							var closestToOther = scene[geo].raycast(geoToLight)
+							if (closestToOther.hit) {
+								if ((closestToOther.distance) < (light.clone().subtract(closestGeo.point)).length()) {
+									isShadowPlane = true;
+									break;
+								}
 							}
 						}
 					}
 				}
-			}
 
-			if (closestGeo.hit) {
-				if (!isShadowPlane) {
-					setPixelColor(xPixelIndex, yPixelIndex, (scene[geoID].color.clone().multiplyScalar(geoDotLight)));
-				} else {
-					setPixelColor(xPixelIndex, yPixelIndex, 0);
+				if (closestGeo.hit && !isShadowPlane) {
+						colorVec.add(scene[geoID].color.clone().multiplyScalar(geoDotLight));
 				}
-			} else {
-				setPixelColor(xPixelIndex, yPixelIndex, 0.1);
 			}
+			setPixelColor(xPixelIndex, yPixelIndex, colorVec.multiplyScalar(1 / aX.length));
 		}
 	}
 
