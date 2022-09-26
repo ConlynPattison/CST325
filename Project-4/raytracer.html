@@ -5,6 +5,7 @@
 	<title>Raytracer</title>
 </head>
 <body>
+
 <canvas id='my-canvas'><canvas>
 
 <script src='math/vector3.js'></script>
@@ -54,12 +55,13 @@ var eyeCoordinate = new Vector3(0, 0, eyeDistance); // all of your rays will use
 // They also provide a "raycast" function that you can pass a ray to
 // in order to find intersection between the ray and the object
 var light = new Vector3(1,0,0);
+
 var red = new Vector3(1,0,0);
 var green = new Vector3(0,1,0);
 var white = new Vector3(1,1,1);
 
 var sphere = new Sphere(new Vector3(0,0,0), 0.25, white, 1);
-var floor = new Plane(new Vector3(0,1,0), new Vector3(0,-0.75,0), white, 0);
+var floor = new Plane(new Vector3(0,1,0), new Vector3(0,-0.5,0), white, 0);
 var leftWall = new Plane(new Vector3(1,0,0), new Vector3(-1,0,0), red, 0);
 var rightWall = new Plane(new Vector3(-1,0,0), new Vector3(1,0,0), green, 0);
 var ceiling = new Plane(new Vector3(0,-1,0), new Vector3(0,1,0), white, 0);
@@ -72,9 +74,11 @@ var scene = [sphere, floor, leftWall, rightWall, ceiling, backWall, behindWall];
 var aX = [0.3333,0.8333,0.6667,0.1667];
 // [y1,y2,...,yn]
 var aY = [0.1667,0.3333,0.8333,0.6667];
+invAaLength =  1 / aX.length;
 var pixelOffsetX;
 var pixelOffsetY;
-var geoID_sh;
+
+var colorVec = new Vector3(0,0,0)
 
 // end of raytracer setup ******************************************************
 
@@ -111,32 +115,29 @@ function getColor(ray, currentDepth) {
 	if (closestGeo.hit) {
 		// 	Calculate the color using lighting and shadowing as before
 		var isShadowPlane = false;
-		var geoDotLight = closestGeo.normal.clone().dot((light.clone().subtract(closestGeo.point)).normalize());
+		var geoDotLight = closestGeo.normal.dot((light.clone().subtract(closestGeo.point)).normalize());
 		var geoToLight = new Ray(closestGeo.point.subtract(light.clone().subtract(closestGeo.point).multiplyScalar(0.001)), light.clone().subtract(closestGeo.point));
 		for (var geo = 0; geo < scene.length; geo++) {
-			//if (geo != geoID) {
-				var closestToOther = scene[geo].raycast(geoToLight)
-				if (closestToOther.hit) {
-					if ((closestToOther.distance) < (light.clone().subtract(closestGeo.point)).length()) {
-						isShadowPlane = true;
-						break;
-					}
+			var closestToOther = scene[geo].raycast(geoToLight)
+			if (closestToOther.hit) {
+				if ((closestToOther.distance) < (light.clone().subtract(closestGeo.point)).length()) {
+					isShadowPlane = true;
+					break;
 				}
-			//}
+			}
 		}
 		if (!isShadowPlane) {
 			workingColor.add(scene[geoID].color.clone().multiplyScalar(geoDotLight));
 		} 
-
 		if (currentDepth < 2) {
 			// 	Calculate the reflection ray and call getColor(reflection ray, depth + 1)
-			var relativeRay = ray.direction.clone().multiplyScalar(-1); // vector3 (1st case is int to eye)
-			var reflectionDir = (relativeRay.clone().multiplyScalar(-1)).add((closestGeo.normal.clone().multiplyScalar(2)).multiplyScalar(closestGeo.normal.clone().dot(relativeRay)))
-			var reflectionRay = new Ray(closestGeo.point.clone(), reflectionDir);
+			var relativeRay = ray.direction.multiplyScalar(-1); // vector3 (1st case is int to eye)
+			var reflectionDir = (relativeRay.clone().multiplyScalar(-1)).add(closestGeo.normal.clone().multiplyScalar(closestGeo.normal.dot(relativeRay)*2))
+			var reflectionRay = new Ray(closestGeo.point, reflectionDir);
 			var multColor = getColor(reflectionRay, currentDepth + 1);
 
 			// 	Multiply the reflection color by the object's reflectivity (range 0 to 1)
-			var reflectionColor = multColor.clone().multiplyScalar(scene[geoID].reflectivity);
+			var reflectionColor = multColor.multiplyScalar(scene[geoID].reflectivity);
 
 			// 	Add the reflection color to your previous color and return it
 			return workingColor.add(reflectionColor);
@@ -148,7 +149,7 @@ function getColor(ray, currentDepth) {
 	}
 	else {
 		// 	Return the background color
-		return new Vector3(0,0,0);
+		return workingColor.set(0,0,0);
 	}
 }
 
@@ -163,7 +164,6 @@ function setPixelColor(xPixelIndex, yPixelIndex, color /*[0,1]*/) {
 
 // -----------------------------------------------------------------------------
 function updateAndRender(timeElapsed) {
-
 	var seconds = timeElapsed * 0.001; // convert milliseconds to seconds
 	light.x = Math.cos(seconds) * 0.5; // radius of 0.5
 	light.z = Math.sin(seconds) * 0.5; // radius of 0.5
@@ -173,14 +173,14 @@ function updateAndRender(timeElapsed) {
 	// last time you call it will be the color and overwrite previous calls.
 	for (var yPixelIndex = 0; yPixelIndex < pixelsDown; ++yPixelIndex) {
 		for (var xPixelIndex = 0; xPixelIndex < pixelsAcross; ++xPixelIndex) {
-			var colorVec = new Vector3(0,0,0);
+			colorVec.set(0,0,0);
 			for (var offsetAA = 0; offsetAA < aX.length; offsetAA++) {
 				pixelOffsetX = aX[offsetAA];
 				pixelOffsetY = aY[offsetAA];
 				var pixelRay = generateRayForPixel(xPixelIndex, yPixelIndex);
 				colorVec.add(getColor(pixelRay, 0));
 			}
-			setPixelColor(xPixelIndex, yPixelIndex, colorVec.multiplyScalar(1 / aX.length));
+			setPixelColor(xPixelIndex, yPixelIndex, colorVec.multiplyScalar(invAaLength));
 		}
 	}
 
