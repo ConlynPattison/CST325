@@ -56,22 +56,25 @@ var eyeCoordinate = new Vector3(0, 0, eyeDistance); // all of your rays will use
 var light = new Vector3(1,0,0);
 var red = new Vector3(1,0,0);
 var green = new Vector3(0,1,0);
+var white = new Vector3(1,1,1);
 
-var sphere = new Sphere(new Vector3(0,0,0), 0.25);
-var floor = new Plane(new Vector3(0,1,0), new Vector3(0,-.25,0));
-var leftWall = new Plane(new Vector3(1,0,0), new Vector3(-1,0,0), red);
-var rightWall = new Plane(new Vector3(-1,0,0), new Vector3(1,0,0), green);
-var ceiling = new Plane(new Vector3(0,-1,0), new Vector3(0,1,0));
-var backWall = new Plane(new Vector3(0,0,1), new Vector3(0,0,-1));
+var sphere = new Sphere(new Vector3(0,0,0), 0.25, white, 1);
+var floor = new Plane(new Vector3(0,1,0), new Vector3(0,-0.75,0), white, 0);
+var leftWall = new Plane(new Vector3(1,0,0), new Vector3(-1,0,0), red, 0);
+var rightWall = new Plane(new Vector3(-1,0,0), new Vector3(1,0,0), green, 0);
+var ceiling = new Plane(new Vector3(0,-1,0), new Vector3(0,1,0), white, 0);
+var backWall = new Plane(new Vector3(0,0,1), new Vector3(0,0,-1), white, 0);
+var behindWall = new Plane(new Vector3(0,0,-1), new Vector3(0,0,1), white, 0);
 
-var scene = [sphere, floor, leftWall, rightWall, ceiling, backWall];
+var scene = [sphere, floor, leftWall, rightWall, ceiling, backWall, behindWall];
 
 // Antialiasing sample offsets [x1,x2,...,xn]
 var aX = [0.3333,0.8333,0.6667,0.1667];
 // [y1,y2,...,yn]
-var aY = [0.3333,0.8333,0.6667,0.1667];
+var aY = [0.1667,0.3333,0.8333,0.6667];
 var pixelOffsetX;
 var pixelOffsetY;
+var geoID_sh;
 
 // end of raytracer setup ******************************************************
 
@@ -87,6 +90,66 @@ function generateRayForPixel(xPixelIndex, yPixelIndex) {
 	// Creates a ray from the eye toward the pixelCoordinate
 	var pixelRay = new Ray(eyeCoordinate, direction);
 	return pixelRay;
+}
+
+function getColor(ray, currentDepth) {
+	// Find the closest object/intersection for the passed in ray
+	var workingColor = new Vector3(0,0,0);
+	var closestGeo = {hit : false, distance : null};
+	var geoID = -1;
+	for (var geo = 0; geo < scene.length; geo++) {
+		var castResult = {hit : false};
+		castResult = scene[geo].raycast(ray) // ray changes ***
+		if (castResult.hit) {
+			if ((castResult.distance < closestGeo.distance) || closestGeo.distance == null) {
+				closestGeo = castResult;
+				geoID = geo;
+			}
+		}
+	}
+	// If you have a valid intersected object
+	if (closestGeo.hit) {
+		// 	Calculate the color using lighting and shadowing as before
+		var isShadowPlane = false;
+		var geoDotLight = closestGeo.normal.clone().dot((light.clone().subtract(closestGeo.point)).normalize());
+		var geoToLight = new Ray(closestGeo.point.subtract(light.clone().subtract(closestGeo.point).multiplyScalar(0.001)), light.clone().subtract(closestGeo.point));
+		for (var geo = 0; geo < scene.length; geo++) {
+			//if (geo != geoID) {
+				var closestToOther = scene[geo].raycast(geoToLight)
+				if (closestToOther.hit) {
+					if ((closestToOther.distance) < (light.clone().subtract(closestGeo.point)).length()) {
+						isShadowPlane = true;
+						break;
+					}
+				}
+			//}
+		}
+		if (!isShadowPlane) {
+			workingColor.add(scene[geoID].color.clone().multiplyScalar(geoDotLight));
+		} 
+
+		if (currentDepth < 2) {
+			// 	Calculate the reflection ray and call getColor(reflection ray, depth + 1)
+			var relativeRay = ray.direction.clone().multiplyScalar(-1); // vector3 (1st case is int to eye)
+			var reflectionDir = (relativeRay.clone().multiplyScalar(-1)).add((closestGeo.normal.clone().multiplyScalar(2)).multiplyScalar(closestGeo.normal.clone().dot(relativeRay)))
+			var reflectionRay = new Ray(closestGeo.point.clone(), reflectionDir);
+			var multColor = getColor(reflectionRay, currentDepth + 1);
+
+			// 	Multiply the reflection color by the object's reflectivity (range 0 to 1)
+			var reflectionColor = multColor.clone().multiplyScalar(scene[geoID].reflectivity);
+
+			// 	Add the reflection color to your previous color and return it
+			return workingColor.add(reflectionColor);
+		}
+		else {
+			// 	Return the calculated color
+			return workingColor;
+		}
+	}
+	else {
+		// 	Return the background color
+		return new Vector3(0,0,0);
+	}
 }
 
 // -----------------------------------------------------------------------------
@@ -115,41 +178,7 @@ function updateAndRender(timeElapsed) {
 				pixelOffsetX = aX[offsetAA];
 				pixelOffsetY = aY[offsetAA];
 				var pixelRay = generateRayForPixel(xPixelIndex, yPixelIndex);
-
-				// See if the ray intersects with every object in our scene (hold the closest obj)
-				var closestGeo = {hit : false, distance : null};
-				var geoID = -1;
-				for (var geo = 0; geo < scene.length; geo++) {
-					var castResult = {hit : false};
-					castResult = scene[geo].raycast(pixelRay)
-					if (castResult.hit) {
-						if ((castResult.distance < closestGeo.distance) || closestGeo.distance == null) {
-							closestGeo = castResult;
-							geoID = geo;
-						}
-					}
-				}
-
-				var isShadowPlane = false;
-				if (closestGeo.hit) {
-					var geoDotLight = closestGeo.normal.clone().dot((light.clone().subtract(closestGeo.point)).normalize());
-					var geoToLight = new Ray(closestGeo.point, light.clone().subtract(closestGeo.point));
-					for (var geo = 0; geo < scene.length; geo++) {
-						if (geo != geoID) {
-							var closestToOther = scene[geo].raycast(geoToLight)
-							if (closestToOther.hit) {
-								if ((closestToOther.distance) < (light.clone().subtract(closestGeo.point)).length()) {
-									isShadowPlane = true;
-									break;
-								}
-							}
-						}
-					}
-				}
-
-				if (closestGeo.hit && !isShadowPlane) {
-						colorVec.add(scene[geoID].color.clone().multiplyScalar(geoDotLight));
-				}
+				colorVec.add(getColor(pixelRay, 0));
 			}
 			setPixelColor(xPixelIndex, yPixelIndex, colorVec.multiplyScalar(1 / aX.length));
 		}
