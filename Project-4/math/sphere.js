@@ -14,7 +14,7 @@
  * }
  */
 
-var Sphere = function(center, radius, color) {
+var Sphere = function(center, radius, color, reflectivity) {
   // Sanity checks (your modification should be below this where indicated)
   if (!(this instanceof Sphere)) {
     console.error("Sphere constructor must be called with the new operator");
@@ -23,6 +23,7 @@ var Sphere = function(center, radius, color) {
   this.center = center;
   this.radius = radius;
   this.color = color;
+  this.reflectivity = reflectivity;
 
   // todo - make sure this.center and this.radius are replaced with default values if and only if they
   // are invalid or undefined (i.e. center should be of type Vector3 & radius should be a Number)
@@ -40,6 +41,10 @@ var Sphere = function(center, radius, color) {
     this.color = new Vector3(1,1,1)
   }
 
+  if (this.reflectivity == undefined) {
+    this.reflectivity = 0;
+  }
+
   // Sanity checks (your modification should be above this)
   if (!(this.center instanceof Vector3)) {
     console.error("The sphere center must be a Vector3");
@@ -51,6 +56,10 @@ var Sphere = function(center, radius, color) {
 
   if (!(this.color instanceof Vector3)) {
     console.error("The sphere color must be a Vector3");
+  }
+
+  if ((typeof(this.reflectivity) != 'number')) {
+    console.error("The reflectivity must be a Number");
   }
 };
 
@@ -68,8 +77,9 @@ Sphere.prototype = {
     // An object created from a literal that we will return as our result
     // Replace the null values in the properties below with the right values
     if (discriminant >= 0) {
-      var alpha0 = (-b + Math.sqrt(discriminant)) / (2 * a);
-      var alpha1 = (-b - Math.sqrt(discriminant)) / (2 * a);
+      var sqrtDisc = Math.sqrt(discriminant);
+      var alpha0 = (-b + sqrtDisc) / (2 * a);
+      var alpha1 = (-b - sqrtDisc) / (2 * a);
 
       if (alpha0 >= 0 && alpha1 >= 0) {
         var alpha = Math.abs(alpha0) > Math.abs(alpha1) ? alpha1 : alpha0;

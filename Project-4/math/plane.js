@@ -3,7 +3,7 @@
  * @param normal A Vector3 object representing the normal direction of the plane
  * @param validPoint A Vector3 object representing any point that lies on the plane (you choose)
  */
-var Plane = function(normal, validPoint, color) {
+var Plane = function(normal, validPoint, color, reflectivity) {
   // sanity checks -----------
   if (!(this instanceof Plane)) {
     console.error("Plane constructor must be called with the new operator");
@@ -21,6 +21,10 @@ var Plane = function(normal, validPoint, color) {
 	color = new Vector3(1,1,1)
   }
 
+  if (reflectivity === undefined) {
+	reflectivity = 0;
+  }
+
   if (!(normal instanceof Vector3)) {
     console.error("The plane normal must be a Vector3");
   }
@@ -32,9 +36,14 @@ var Plane = function(normal, validPoint, color) {
   if (!(color instanceof Vector3)) {
     console.error("The plane color must be a Vector3");
   }
+
+  if ((typeof(reflectivity) != 'number')) {
+    console.error("The reflectivity must be a Number");
+  }
   	this.color = color;
 	this.normal = normal.clone().normalize();
 	this.validPoint = validPoint;
+	this.reflectivity = reflectivity;
 }
 
 Plane.prototype = {
