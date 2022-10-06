@@ -1,0 +1,597 @@
+<html>
+
+<head>
+  <script src="../math/vector3.js"></script>
+  <script src="../math/vector4.js"></script>
+  <script src="../math/matrix4.js"></script>
+  <script src="misc/test.js"></script>
+  <script src="misc/three.js"></script>
+</head>
+
+<body onload="testMatrix4()">
+  <script>
+
+    var reporter = new TestReporter();
+
+    //-----------------------------------------------------------------------------
+    function testMatrix4() {
+      reporter.reportText('Tests required to pass to earn a "B"<br><br>');
+
+      testMakeIdentity();
+      testMultiplyVector();
+      testMultiply();
+      testMakeScale();
+      testMakeRotationX();
+      testMakeRotationY();
+      testMakeRotationZ();
+      testMakeTranslation();
+      testMakePerspectiveProjection();
+      testMakeOrthographicProjection();
+
+      reporter.reportText('<br>Tests required to pass to earn an "A"<br><br>');
+
+      testCreateMoonMatrix();
+
+      reporter.reportFinalResults();
+
+      // testCrossProduct();
+    }
+
+    //-----------------------------------------------------------------------------
+    function testMakeIdentity() {
+      reporter.reportTestStart("makeIdentity");
+
+      var identity = new Matrix4();
+      for (var i = 0; i < identity.elements.length; ++i) {
+        identity.elements[i] = (i % 4 == Math.floor(i / 4)) ? 1 : 0;
+      }
+
+      var m1 = new Matrix4();
+      m1.elements = Float32Array.from([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
+      m1.makeIdentity();
+
+      try {
+        assert(matrix4Equal(m1, identity), "matrix should be identity");
+        reporter.reportTestEnd(true);
+      } catch (err) {
+        reporter.reportTestEnd(false);
+      }
+    }
+
+    //-----------------------------------------------------------------------------
+    function testMakeScale() {
+      reporter.reportTestStart("makeScale");
+
+      var m1 = new Matrix4();
+      for (var i = 0; i < m1.elements.length; ++i) {
+        m1.elements[i] = Math.random();
+      }
+
+      expected = new Matrix4();
+      expected.elements = Float32Array.from([
+        3, 0, 0, 0,
+        0, 4, 0, 0,
+        0, 0, 5, 0,
+        0, 0, 0, 1
+      ]);
+
+      try {
+        m1.makeScale(3, 4, 5);
+        assert(matrix4Equal(m1, expected));
+        reporter.reportTestEnd(true);
+      } catch (err) {
+        reporter.reportTestEnd(false);
+      }
+    }
+
+    //-----------------------------------------------------------------------------
+    function testMakeRotationX() {
+      reporter.reportTestStart("makeRotationX");
+
+      var rotation = new Matrix4().makeRotationX(90);
+
+      var expectedResult = new Matrix4();
+      expectedResult.elements = Float32Array.from([
+        1, 0,  0, 0,
+        0, 0, -1, 0,
+        0, 1,  0, 0,
+        0, 0,  0, 1
+      ]);
+
+      try {
+        assert(matrix4Equal(rotation, expectedResult), "testMakeRotationX");
+        reporter.reportTestEnd(true);
+      } catch (err) {
+        reporter.reportTestEnd(false);
+      }
+    }
+
+    //-----------------------------------------------------------------------------
+    function testMakeRotationY() {
+      reporter.reportTestStart("makeRotationY");
+
+      var rotation = new Matrix4().makeRotationY(90);
+
+      var expectedResult = new Matrix4();
+      expectedResult.elements = Float32Array.from([
+         0, 0, 1, 0,
+         0, 1, 0, 0,
+        -1, 0, 0, 0,
+         0, 0, 0, 1
+      ]);
+
+      try {
+        assert(matrix4Equal(rotation, expectedResult), "testMakeRotationY");
+        reporter.reportTestEnd(true);
+      } catch (err) {
+        reporter.reportTestEnd(false);
+      }
+    }
+
+    //-----------------------------------------------------------------------------
+    function testMakeRotationZ() {
+      reporter.reportTestStart("makeRotationZ");
+
+      var rotation = new Matrix4().makeRotationZ(90);
+
+      var expectedResult = new Matrix4();
+      expectedResult.elements = Float32Array.from([
+        0, -1, 0, 0,
+        1,  0, 0, 0,
+        0,  0, 1, 0,
+        0,  0, 0, 1
+      ])
+
+      try {
+        assert(matrix4Equal(rotation, expectedResult), "testMakeRotationY");
+        reporter.reportTestEnd(true);
+      } catch (err) {
+        reporter.reportTestEnd(false);
+      }
+    }
+
+
+    //-----------------------------------------------------------------------------
+    function testMakeTranslation() {
+      reporter.reportTestStart("makeTranslation");
+
+      var m1 = new Matrix4();
+      var v1 = new Vector3(1, 2, 3);
+      var expectedResult = new Matrix4();
+      expectedResult.elements = Float32Array.from([
+        1, 0, 0, 1,
+        0, 1, 0, 2,
+        0, 0, 1, 3,
+        0, 0, 0, 1
+      ]);
+
+      m1.makeTranslation(v1);
+
+      try {
+        assert(matrix4Equal(m1, expectedResult), "testTranslation1");
+      } catch (err) {
+        reporter.reportTestEnd(false);
+        return;
+      }
+
+      m1.makeTranslation(1, 2, 3);
+
+      try {
+        assert(matrix4Equal(m1, expectedResult), "testTranslation2");
+        reporter.reportTestEnd(true);
+      } catch (err) {
+        reporter.reportTestEnd(false);
+      }
+    }
+
+    //-------------------------------------------------------------------------------
+    function testCrossProduct() {
+      reporter.reportTestStart("cross product");
+
+      var v17 = new Vector3(1, 0, 0);
+      var v18 = new Vector3(0, 1, 0);
+      var cross = v17.cross(v18);
+
+      try {
+        assert(vectorEqual(cross, 0, 0, 1));
+        reporter.reportTestEnd(true);
+      } catch (err) {
+        reporter.reportTestEnd(false);
+      }
+    }
+
+    //-----------------------------------------------------------------------------
+    function testMakePerspectiveProjection() {
+      reporter.reportTestStart("makePerspective");
+
+      var perspective = new Matrix4().makePerspective(90, 2, 1, 100);
+      var m33 = -1.0202020406723022;
+      var m34 = -2.0202019214630127;
+      var expectedResult = new Matrix4();
+      expectedResult.elements = Float32Array.from([
+        0.5, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, m33, m34,
+        0, 0, -1, 0
+      ]);
+
+      try {
+        assert(matrix4Equal(perspective, expectedResult), "testMakePerspectiveProjection");
+        reporter.reportTestEnd(true);
+      } catch (err) {
+        reporter.reportTestEnd(false);
+      }
+    }
+
+    //-----------------------------------------------------------------------------
+    function testMakeOrthographicProjection() {
+      reporter.reportTestStart("makeOrthographic");
+
+      var orthographic = new Matrix4().makeOrthographic(-1, 3, 1, 2, 3, 23);
+      var m33 = -0.10000000149011612;
+      var m34 = -1.2999999523162842;;
+      var expectedResult = new Matrix4();
+      expectedResult.elements = Float32Array.from([
+        0.5, 0, 0, -0.5,
+        0, -2, 0, 3,
+        0, 0, m33, m34,
+        0, 0, 0, 1
+      ]);
+
+      try {
+        assert(matrix4Equal(orthographic, expectedResult), "testMakeOrthographicProjection");
+        reporter.reportTestEnd(true);
+      } catch (err) {
+        reporter.reportTestEnd(false);
+      }
+    }
+
+    //-----------------------------------------------------------------------------
+    function testMakeLookAt() {
+      reporter.reportTestStart("makeLookAt");
+
+      var eyePosition = new Vector3(-1, 1, 1);
+      var targetPosition = new Vector3(-1, 0, 0);
+      var worldUp = new Vector3(0, 1, 0);
+      var r = Math.SQRT2 / 2;
+
+      var lookAt = new Matrix4().makeLookAt(eyePosition, targetPosition, worldUp);
+      var expectedResult = new Matrix4();
+      expectedResult.elements = Float32Array.from([
+        1, 0, 0, -1,
+        0, r, r, 1,
+        0, -r, r, 1,
+        0, 0, 0, 1
+      ]);
+
+      try {
+        assert(matrix4Equal(lookAt, expectedResult), "testMakeLookAt");
+        reporter.reportTestEnd(true);
+      } catch (err) {
+        reporter.reportTestEnd(false);
+      }
+    }
+
+    //-----------------------------------------------------------------------------
+    function testDefaultValues() {
+      reporter.reportTestStart("default values");
+
+      // manually creating identity matrix for comparison
+      var identity = new Matrix4();
+      for (var i = 0; i < 16; ++i) {
+        identity.elements[i] = (i % 4 == Math.floor(i / 4)) ? 1 : 0;
+      }
+
+      var m1 = new Matrix4();
+
+      try {
+        assert(matrix4Equal(m1, identity), "default values");
+        reporter.reportTestEnd(true);
+      } catch (err) {
+        reporter.reportTestEnd(false);
+      }
+    }
+
+    //-----------------------------------------------------------------------------
+    function testClone() {
+      reporter.reportTestStart("clone");
+
+      var m1 = new Matrix4();
+      m1.elements = Float32Array.from([
+        2, 4, 6, 8,
+        10, 12, 14, 16,
+        18, 20, 22, 24,
+        26, 28, 32, 36
+      ]);
+
+      var m2 = m1.clone();
+
+      try {
+        assert(m1 != m2, "clone should return a new instance");
+        assert(matrix4Equal(m1, m2), "clone values should match the original");
+        reporter.reportTestEnd(true);
+      } catch (err) {
+        reporter.reportTestEnd(false);
+      }
+    }
+
+    //-----------------------------------------------------------------------------
+    function testSet() {
+      reporter.reportTestStart("make");
+
+      var m1 = new Matrix4();
+
+      for (var i = 0; i < 16; ++i) {
+        m1.elements[i] = (i + 1) * 2;
+      }
+
+      var m2 = new Matrix4().set(
+        2, 4, 6, 8,
+        10, 12, 14, 16,
+        18, 20, 22, 24,
+        26, 28, 30, 32
+      );
+
+      try {
+        assert(matrix4Equal(m1, m2), "matrix make");
+        reporter.reportTestEnd(true);
+      } catch (err) {
+        reporter.reportTestEnd(false);
+      }
+    }
+
+
+    //-----------------------------------------------------------------------------
+    function testCopy() {
+      reporter.reportTestStart("copy");
+
+      var m1 = new Matrix4();
+      m1.elements = Float32Array.from([
+        9, 8, 7, 6,
+        6, 5, 4, 3,
+        3, 2, 1, 0,
+        1, 2, 3, 4
+      ]);
+
+      var m2 = new Matrix4().copy(m1);
+
+      try {
+        assert(m1 != m2, "copy should only copy values");
+        assert(matrix4Equal(m1, m2), "values should be equal in a matrix copy");
+        reporter.reportTestEnd(true);
+      } catch (err) {
+        reporter.reportTestEnd(false);
+      }
+    }
+
+    //-----------------------------------------------------------------------------
+    function testIdentity() {
+      reporter.reportTestStart("identity");
+
+      var identity = new Matrix4();
+      for (var i = 0; i < 16; ++i) {
+        identity.elements[i] = (i % 4 == Math.floor(i / 4)) ? 1 : 0;
+      }
+
+      var m1 = new Matrix4();
+      m1.elements = Float32Array.from([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
+      m1.makeIdentity();
+
+      try {
+        assert(matrix4Equal(m1, identity), "matrix should be identity");
+        reporter.reportTestEnd(true);
+      } catch (err) {
+        reporter.reportTestEnd(false);
+      }
+    }
+
+    //-----------------------------------------------------------------------------
+    function testMultiplyScalar() {
+      reporter.reportTestStart("multiply scalar");
+
+      var m1 = new Matrix4();
+      m1.elements = Float32Array.from([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
+      m1.multiplyScalar(2);
+
+      try {
+        for (var i = 0; i < 16; ++i) {
+          assert(floatEqual(m1.elements[i], (i + 1) * 2), "scalar-matrix multiplication");
+        }
+
+        reporter.reportTestEnd(true);
+      } catch (err) {
+        reporter.reportTestEnd(false);
+      }
+    }
+
+    //-----------------------------------------------------------------------------
+    function testMultiplyVector() {
+      reporter.reportTestStart("multiply vector");
+
+      var m1 = new Matrix4();
+      m1.elements = Float32Array.from([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
+
+      var v1 = new Vector4(3, 2, 1, 1);
+      var expectedResult = new Vector4(14, 42, 70, 98);
+
+      try {
+        var v2 = m1.multiplyVector(v1);
+        assert(vectorEqual(v2, expectedResult), "matrix-vector multiplication");
+        reporter.reportTestEnd(true);
+      } catch (err) {
+        reporter.reportTestEnd(false);
+      }
+    }
+
+    //-----------------------------------------------------------------------------
+    function testMultiply() {
+      reporter.reportTestStart("multiply");
+
+      var matRight = new Matrix4();
+      matRight.elements = Float32Array.from([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
+
+      var m1 = new Matrix4();
+      m1.elements = Float32Array.from([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
+
+      var expectedResult = new Matrix4();
+      expectedResult.elements = Float32Array.from([
+        62, 68, 74, 80, 
+        174, 196, 218, 240,
+        286, 324, 362, 400,
+        398, 452, 506, 560]);
+
+      m1.multiply(matRight);
+
+      try {
+        assert(matrix4Equal(m1, expectedResult), "matrix multiply from right side");
+        reporter.reportTestEnd(true);
+      } catch (err) {
+        reporter.reportTestEnd(false);
+      }
+    }
+
+    //-----------------------------------------------------------------------------
+    function testDeterminant() {
+      reporter.reportTestStart("determinant");
+
+      var m1 = new Matrix4();
+      m1.elements = Float32Array.from([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
+
+      var det = m1.determinant();
+
+      try {
+        assert(floatEqual(det, 0), "determinant of linearly dependent basis vectors should be 0");
+        reporter.reportTestEnd(true);
+      } catch (err) {
+        reporter.reportTestEnd(false);
+      }
+    }
+
+    //-----------------------------------------------------------------------------
+    function testTranspose() {
+      reporter.reportTestStart("transpose");
+
+      var m1 = new Matrix4();
+      m1.elements = Float32Array.from([
+        10, 20, 30, 40,
+        50, 60, 70, 80,
+        60, 70, 80, 90,
+        91, 92, 93, 94
+      ]);
+
+      var m2 = m1.clone();
+      m1.transpose();
+
+      try {
+        for (var i = 0; i < 16; ++i) {
+          var row = Math.floor(i / 4);
+          var col = i % 4;
+          assert(floatEqual(m1.getElement(row, col), m2.getElement(col, row)), "tranpose should reflect around the diagonal");
+        }
+
+        reporter.reportTestEnd(true);
+      } catch (err) {
+        reporter.reportTestEnd(false);
+      }
+    }
+
+    //-----------------------------------------------------------------------------
+    function testInverse() {
+      // This test is here for completeness-sake, you are not expected to have implemented this
+      reporter.reportTestStart("inverse");
+
+      var m1 = new Matrix4();
+      m1.elements = Float32Array.from(
+        1, 2, 2, 2,
+        1, 0, 0, 1,
+        1, 0, 0, 0,
+        1, 0, 1, 0
+      );
+      m1.inverse();
+
+      var expectedInverse = new Matrix4().make(
+        0, 0, 1, 0,
+        0.5, -1, 1.5, -1,
+        0, 0, -1, 1,
+        0, 1, -1, 0
+      );
+
+      try {
+        assert(matrix4Equal(m1, expectedInverse), "inverse should match the 'expected' values");
+        reporter.reportTestEnd(true);
+      } catch (err) {
+        reporter.reportTestEnd(false);
+      }
+    }
+
+    //-----------------------------------------------------------------------------
+    function testCreateMoonMatrix() {
+      reporter.reportTestStart("moon matrix transform");
+
+      var v1 = 0.7071067690849304;
+      var v2 = 2.1213202476501465;
+      var earthMatrix = new Matrix4();
+      var values = [
+        v1, -v1, 0, -v1,
+        v1, v1, 0, v2,
+        0, 0, 1, 4,
+        0, 0, 0, 1
+      ];
+      earthMatrix.elements = Float32Array.from(values);
+
+      var p = new Vector3(1, 2, 4);
+      var m1 = new Matrix4().createMoonMatrix(45, p, earthMatrix);
+
+      v1 = 0.9999999403953552;
+      v2 = -2.707106590270996;
+      var v3 = 3.1213202476501465;
+      var expected = new Matrix4();
+      var values = [
+        0, -v1, 0, v2,
+        v1, 0, 0, v3,
+        0, 0, 1, 8,
+        0, 0, 0, 1
+      ];
+      expected.elements = Float32Array.from(values);
+
+      try {
+        assert(matrix4Equal(m1, expected, "earth matrix not correct"));
+        reporter.reportTestEnd(true);
+      } catch (err) {
+        reporter.reportTestEnd(false);
+      }
+    }
+
+    function createMoonMatrix(currentRotationAngle, startingPosition, earthMatrix) {
+      return new Matrix4().createMoonMatrix(currentRotationAngle, startingPosition, earthMatrix);
+    }
+
+
+  </script>
+  <table>
+    <tr>
+      <td style="text-align:center">
+        using your moon matrix
+      </td>
+      <td style="text-align:center">
+        expected result
+        </d>
+    </tr>
+    <tr>
+      <td>
+        <span id="orbit-root"></span>
+      </td>
+      <td>
+        <img width="500" height="500" src="misc/expected-output.gif">
+      </td>
+    </tr>
+  </table>
+
+
+  <script src="misc/orbit.js"></script>
+</body>
+
+
+</html>
+
+<!-- EOF 00100001-10 -->
