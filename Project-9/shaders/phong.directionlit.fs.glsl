@@ -21,9 +21,9 @@ void main(void) {
     // todo #4 in world space, calculate the direction from the surface point to the eye (normalized)
     vec3 surfaceToEye = normalize(uCameraPosition - vWorldPosition);
     // todo #5 in world space, calculate the reflection vector (normalized)
-    vec3 normalizedReflectionVector = normalize(-surfaceToEye) + (2.0*(dot(surfaceToEye, normalizedWorldNormal))*normalizedWorldNormal);
+    vec3 normalizedReflectionVector = normalize(-normalizedLightDirection) + 2.0*(dot(normalizedLightDirection, normalizedWorldNormal))*normalizedWorldNormal;
     // todo #6 calculate the phong term
-    float phongTerm = max(pow(dot(surfaceToEye, normalizedReflectionVector), 64.0), 0.0);
+    float phongTerm = pow(max(dot(normalizedReflectionVector, surfaceToEye), 0.0), 64.0);
 
     // combine
     // todo #7 apply light and material interaction for diffuse value by using the texture color as the material
@@ -41,7 +41,7 @@ void main(void) {
     vec3 finalColor = ambient; // + diffuseColor + specularColor;
 
     //gl_FragColor = vec4(finalColor, 1.0);
-    gl_FragColor = vec4(phongTerm, phongTerm, phongTerm, 1.0);
+    gl_FragColor = vec4(normalizedReflectionVector, 1.0);
 }
 
 // EOF 00100001-10
