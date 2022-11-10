@@ -133,6 +133,29 @@ function updateAndRender() {
 
     // todo #10
     // add keyboard controls for changing light direction here
+    var lightPositionVect4 = new Vector4(lightDirection.x, lightDirection.y, lightDirection.z, 0.0);
+    var horizontalRotMatrix = new Matrix4().makeRotationY(1);
+    var verticalRotMatrix = new Matrix4().makeRotationX(1);
+    console.log(lightDirection);
+    if (appInput.a || appInput.left) {
+        lightPositionVect4 = horizontalRotMatrix.multiplyVector(lightPositionVect4);
+        lightDirection.set(lightPositionVect4.x, lightPositionVect4.y, lightPositionVect4.z);
+    }
+    if (appInput.d || appInput.right) {
+        lightPositionVect4 = horizontalRotMatrix.inverse().multiplyVector(lightPositionVect4);
+        lightDirection.set(lightPositionVect4.x, lightPositionVect4.y, lightPositionVect4.z);
+    }
+
+    if (appInput.w || appInput.up) {
+        lightPositionVect4 = verticalRotMatrix.multiplyVector(lightPositionVect4);
+        lightDirection.set(lightPositionVect4.x, lightPositionVect4.y, lightPositionVect4.z);
+    }
+    if (appInput.s || appInput.down) {
+        lightPositionVect4 = verticalRotMatrix.inverse().multiplyVector(lightPositionVect4);
+        lightDirection.set(lightPositionVect4.x, lightPositionVect4.y, lightPositionVect4.z);
+    }
+
+
 
     time.update();
     camera.update(time.deltaTime);
