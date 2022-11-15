@@ -131,31 +131,8 @@ function updateAndRender() {
 
     var aspectRatio = gl.canvasWidth / gl.canvasHeight;
 
-    // todo #10
-    // add keyboard controls for changing light direction here
-    var lightPositionVect4 = new Vector4(lightPosition.x, lightPosition.y, lightPosition.z, 0.0);
-    var horizontalRotMatrix = new Matrix4().makeRotationY(1);
-    var verticalRotMatrix = new Matrix4().makeRotationX(1);
-    console.log(lightPosition);
-    if (appInput.a || appInput.left) {
-        lightPositionVect4 = horizontalRotMatrix.multiplyVector(lightPositionVect4);
-        lightPosition.set(lightPositionVect4.x, lightPositionVect4.y, lightPositionVect4.z);
-    }
-    if (appInput.d || appInput.right) {
-        lightPositionVect4 = horizontalRotMatrix.inverse().multiplyVector(lightPositionVect4);
-        lightPosition.set(lightPositionVect4.x, lightPositionVect4.y, lightPositionVect4.z);
-    }
-
-    if (appInput.w || appInput.up) {
-        lightPositionVect4 = verticalRotMatrix.multiplyVector(lightPositionVect4);
-        lightPosition.set(lightPositionVect4.x, lightPositionVect4.y, lightPositionVect4.z);
-    }
-    if (appInput.s || appInput.down) {
-        lightPositionVect4 = verticalRotMatrix.inverse().multiplyVector(lightPositionVect4);
-        lightPosition.set(lightPositionVect4.x, lightPositionVect4.y, lightPositionVect4.z);
-    }
-
-
+    var rotationMatrix = new Matrix4().makeRotationY(time.secondsElapsedSinceStart*100);
+    var lightPositionRotated = rotationMatrix.multiplyVector(new Vector4(lightPosition.x, lightPosition.y, lightPosition.z, 1.0));
 
     time.update();
     camera.update(time.deltaTime);
@@ -170,7 +147,7 @@ function updateAndRender() {
     gl.useProgram(phongShaderProgram);
     var uniforms = phongShaderProgram.uniforms;
     var cameraPosition = camera.getPosition();
-    gl.uniform3f(uniforms.lightPositionUniform, lightPosition.x, lightPosition.y, lightPosition.z);
+    gl.uniform3f(uniforms.lightPositionUniform, lightPositionRotated.x, lightPositionRotated.y, lightPositionRotated.z);
     gl.uniform3f(uniforms.cameraPositionUniform, cameraPosition.x, cameraPosition.y, cameraPosition.z);
 
     projectionMatrix.makePerspective(45, aspectRatio, 0.1, 1000);
