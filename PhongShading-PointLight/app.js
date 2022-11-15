@@ -175,12 +175,16 @@ function updateAndRender() {
 
     var aspectRatio = gl.canvasWidth / gl.canvasHeight;
 
-    var rotationMatrix = new Matrix4().makeRotationY(time.secondsElapsedSinceStart*100);
+    var rotationMatrix = new Matrix4().makeRotationY(1);
     var lightPositionRotated = rotationMatrix.multiplyVector(new Vector4(lightPosition.x, lightPosition.y, lightPosition.z, 1.0));
+
+    lightPosition.x = lightPositionRotated.x;
+    lightPosition.y = lightPositionRotated.y;
+    lightPosition.z = lightPositionRotated.z;
 
     var scale = new Matrix4().makeScale(0.005, 0.005, 0.005);
     sphereLightGeometry.worldMatrix.makeIdentity();
-    sphereLightGeometry.worldMatrix.multiply(new Matrix4().makeTranslation(lightPositionRotated)).multiply(scale);
+    sphereLightGeometry.worldMatrix.multiply(new Matrix4().makeTranslation(lightPosition)).multiply(scale);
 
     time.update();
     camera.update(time.deltaTime);
@@ -195,7 +199,7 @@ function updateAndRender() {
     gl.useProgram(phongShaderProgram);
     var uniforms = phongShaderProgram.uniforms;
     var cameraPosition = camera.getPosition();
-    gl.uniform3f(uniforms.lightPositionUniform, lightPositionRotated.x, lightPositionRotated.y, lightPositionRotated.z);
+    gl.uniform3f(uniforms.lightPositionUniform, lightPosition.x, lightPosition.y, lightPosition.z);
     gl.uniform3f(uniforms.cameraPositionUniform, cameraPosition.x, cameraPosition.y, cameraPosition.z);
 
     projectionMatrix.makePerspective(45, aspectRatio, 0.1, 1000);
