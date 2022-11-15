@@ -10,7 +10,7 @@ var sphereGeometry = null; // this will be created after loading from a file
 var groundGeometry = null;
 
 var projectionMatrix = new Matrix4();
-var lightPosition = new Vector3(5, 3, 0);
+var lightPosition = new Vector3(4, 1.5, 0);
 
 // the shader that will be used by each piece of geometry (they could each use their own shader but in this case it will be the same)
 var phongShaderProgram;
@@ -92,7 +92,7 @@ function createShaders(loadedAssets) {
         worldMatrixUniform: gl.getUniformLocation(phongShaderProgram, "uWorldMatrix"),
         viewMatrixUniform: gl.getUniformLocation(phongShaderProgram, "uViewMatrix"),
         projectionMatrixUniform: gl.getUniformLocation(phongShaderProgram, "uProjectionMatrix"),
-        LightPositionUniform: gl.getUniformLocation(phongShaderProgram, "uLightPosition"),
+        lightPositionUniform: gl.getUniformLocation(phongShaderProgram, "uLightPosition"),
         cameraPositionUniform: gl.getUniformLocation(phongShaderProgram, "uCameraPosition"),
         textureUniform: gl.getUniformLocation(phongShaderProgram, "uTexture"),
     };
