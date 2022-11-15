@@ -10,7 +10,7 @@ var sphereGeometry = null; // this will be created after loading from a file
 var groundGeometry = null;
 
 var projectionMatrix = new Matrix4();
-var lightDirection = new Vector3(5, 3, 0);
+var lightPosition = new Vector3(5, 3, 0);
 
 // the shader that will be used by each piece of geometry (they could each use their own shader but in this case it will be the same)
 var phongShaderProgram;
@@ -58,7 +58,7 @@ function initGL(canvas) {
 function loadAssets(onLoadedCB) {
     var filePromises = [
         fetch('./shaders/phong.vs.glsl').then((response) => { return response.text(); }),
-        fetch('./shaders/phong.directionlit.fs.glsl').then((response) => { return response.text(); }),
+        fetch('./shaders/phong.pointlit.fs.glsl').then((response) => { return response.text(); }),
         fetch('./data/sphere.json').then((response) => { return response.json(); }),
         loadImage('./data/marble.jpg'),
         loadImage('./data/crackedMud.png')
@@ -92,7 +92,7 @@ function createShaders(loadedAssets) {
         worldMatrixUniform: gl.getUniformLocation(phongShaderProgram, "uWorldMatrix"),
         viewMatrixUniform: gl.getUniformLocation(phongShaderProgram, "uViewMatrix"),
         projectionMatrixUniform: gl.getUniformLocation(phongShaderProgram, "uProjectionMatrix"),
-        lightDirectionUniform: gl.getUniformLocation(phongShaderProgram, "uLightDirection"),
+        LightPositionUniform: gl.getUniformLocation(phongShaderProgram, "uLightPosition"),
         cameraPositionUniform: gl.getUniformLocation(phongShaderProgram, "uCameraPosition"),
         textureUniform: gl.getUniformLocation(phongShaderProgram, "uTexture"),
     };
@@ -133,26 +133,26 @@ function updateAndRender() {
 
     // todo #10
     // add keyboard controls for changing light direction here
-    var lightPositionVect4 = new Vector4(lightDirection.x, lightDirection.y, lightDirection.z, 0.0);
+    var lightPositionVect4 = new Vector4(lightPosition.x, lightPosition.y, lightPosition.z, 0.0);
     var horizontalRotMatrix = new Matrix4().makeRotationY(1);
     var verticalRotMatrix = new Matrix4().makeRotationX(1);
-    console.log(lightDirection);
+    console.log(lightPosition);
     if (appInput.a || appInput.left) {
         lightPositionVect4 = horizontalRotMatrix.multiplyVector(lightPositionVect4);
-        lightDirection.set(lightPositionVect4.x, lightPositionVect4.y, lightPositionVect4.z);
+        lightPosition.set(lightPositionVect4.x, lightPositionVect4.y, lightPositionVect4.z);
     }
     if (appInput.d || appInput.right) {
         lightPositionVect4 = horizontalRotMatrix.inverse().multiplyVector(lightPositionVect4);
-        lightDirection.set(lightPositionVect4.x, lightPositionVect4.y, lightPositionVect4.z);
+        lightPosition.set(lightPositionVect4.x, lightPositionVect4.y, lightPositionVect4.z);
     }
 
     if (appInput.w || appInput.up) {
         lightPositionVect4 = verticalRotMatrix.multiplyVector(lightPositionVect4);
-        lightDirection.set(lightPositionVect4.x, lightPositionVect4.y, lightPositionVect4.z);
+        lightPosition.set(lightPositionVect4.x, lightPositionVect4.y, lightPositionVect4.z);
     }
     if (appInput.s || appInput.down) {
         lightPositionVect4 = verticalRotMatrix.inverse().multiplyVector(lightPositionVect4);
-        lightDirection.set(lightPositionVect4.x, lightPositionVect4.y, lightPositionVect4.z);
+        lightPosition.set(lightPositionVect4.x, lightPositionVect4.y, lightPositionVect4.z);
     }
 
 
@@ -170,7 +170,7 @@ function updateAndRender() {
     gl.useProgram(phongShaderProgram);
     var uniforms = phongShaderProgram.uniforms;
     var cameraPosition = camera.getPosition();
-    gl.uniform3f(uniforms.lightDirectionUniform, lightDirection.x, lightDirection.y, lightDirection.z);
+    gl.uniform3f(uniforms.lightPositionUniform, lightPosition.x, lightPosition.y, lightPosition.z);
     gl.uniform3f(uniforms.cameraPositionUniform, cameraPosition.x, cameraPosition.y, cameraPosition.z);
 
     projectionMatrix.makePerspective(45, aspectRatio, 0.1, 1000);
