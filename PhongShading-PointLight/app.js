@@ -9,12 +9,14 @@ var camera = new OrbitCamera(appInput);
 var sphereGeometry = null; // this will be created after loading from a file
 var barrelGeometry = null;
 var groundGeometry = null;
+var sphereLightGeometry = null;
 
 var projectionMatrix = new Matrix4();
 var lightPosition = new Vector3(4, 1.5, 0);
 
 // the shader that will be used by each piece of geometry (they could each use their own shader but in this case it will be the same)
 var phongShaderProgram;
+var flatColorShaderProgram;
 
 // auto start the app when the html page is ready
 window.onload = window['initializeAndStartRendering'];
@@ -60,6 +62,8 @@ function loadAssets(onLoadedCB) {
     var filePromises = [
         fetch('./shaders/phong.vs.glsl').then((response) => { return response.text(); }),
         fetch('./shaders/phong.pointlit.fs.glsl').then((response) => { return response.text(); }),
+        fetch('./shaders/flat.color.vs.glsl').then((response) => { return response.text(); }),
+        fetch('./shaders/flat.color.fs.glsl').then((response) => { return response.text(); }),
         fetch('./data/sphere.json').then((response) => { return response.json(); }),
         fetch('./data/barrel.json').then((response) => { return response.json(); }),
         loadImage('./data/marble.jpg'),
@@ -71,11 +75,13 @@ function loadAssets(onLoadedCB) {
         // Assign loaded data to our named variables
         loadedAssets.phongTextVS = values[0];
         loadedAssets.phongTextFS = values[1];
-        loadedAssets.sphereJSON = values[2];
-        loadedAssets.barrelJSON = values[3];
-        loadedAssets.marbleImage = values[4];
-        loadedAssets.barrelImage = values[5];
-        loadedAssets.crackedMudImage = values[6];
+        loadedAssets.flatTextVS = values[2];
+        loadedAssets.flatTextFS = values[3];
+        loadedAssets.sphereJSON = values[4];
+        loadedAssets.barrelJSON = values[5];
+        loadedAssets.marbleImage = values[6];
+        loadedAssets.barrelImage = values[7];
+        loadedAssets.crackedMudImage = values[8];
     }).catch(function(error) {
         console.error(error.message);
     }).finally(function() {
@@ -86,6 +92,7 @@ function loadAssets(onLoadedCB) {
 // -------------------------------------------------------------------------
 function createShaders(loadedAssets) {
     phongShaderProgram = createCompiledAndLinkedShaderProgram(loadedAssets.phongTextVS, loadedAssets.phongTextFS);
+    flatColorShaderProgram = createCompiledAndLinkedShaderProgram(loadedAssets.flatTextVS, loadedAssets.flatTextFS);
 
     phongShaderProgram.attributes = {
         vertexPositionAttribute: gl.getAttribLocation(phongShaderProgram, "aVertexPosition"),
@@ -100,6 +107,21 @@ function createShaders(loadedAssets) {
         lightPositionUniform: gl.getUniformLocation(phongShaderProgram, "uLightPosition"),
         cameraPositionUniform: gl.getUniformLocation(phongShaderProgram, "uCameraPosition"),
         textureUniform: gl.getUniformLocation(phongShaderProgram, "uTexture"),
+    };
+
+    flatColorShaderProgram.attributes = {
+        vertexPositionAttribute: gl.getAttribLocation(flatColorShaderProgram, "aVertexPosition"),
+        vertexNormalsAttribute: gl.getAttribLocation(flatColorShaderProgram, "aNormal"),
+        vertexTexcoordsAttribute: gl.getAttribLocation(flatColorShaderProgram, "aTexcoords")
+    };
+
+    flatColorShaderProgram.uniforms = {
+        worldMatrixUniform: gl.getUniformLocation(flatColorShaderProgram, "uWorldMatrix"),
+        viewMatrixUniform: gl.getUniformLocation(flatColorShaderProgram, "uViewMatrix"),
+        projectionMatrixUniform: gl.getUniformLocation(flatColorShaderProgram, "uProjectionMatrix"),
+        lightPositionUniform: gl.getUniformLocation(flatColorShaderProgram, "uLightPosition"),
+        cameraPositionUniform: gl.getUniformLocation(flatColorShaderProgram, "uCameraPosition"),
+        textureUniform: gl.getUniformLocation(flatColorShaderProgram, "uTexture"),
     };
 }
 
@@ -134,6 +156,17 @@ function createScene() {
 
     barrelGeometry.worldMatrix.makeIdentity();
     barrelGeometry.worldMatrix.multiply(translation).multiply(scale);
+
+    sphereLightGeometry = new WebGLGeometryJSON(gl, flatColorShaderProgram);
+    sphereLightGeometry.create(loadedAssets.sphereJSON)
+
+    // Scaled it down so that the diameter is 3
+    var scale = new Matrix4().makeScale(0.005, 0.005, 0.005);
+    // raise it by the radius to make it sit on the ground
+    var translation = new Matrix4().makeTranslation(lightPosition);
+
+    sphereLightGeometry.worldMatrix.makeIdentity();
+    sphereLightGeometry.worldMatrix.multiply(translation).multiply(scale);
 }
 
 // -------------------------------------------------------------------------
@@ -144,6 +177,10 @@ function updateAndRender() {
 
     var rotationMatrix = new Matrix4().makeRotationY(time.secondsElapsedSinceStart*100);
     var lightPositionRotated = rotationMatrix.multiplyVector(new Vector4(lightPosition.x, lightPosition.y, lightPosition.z, 1.0));
+
+    var scale = new Matrix4().makeScale(0.005, 0.005, 0.005);
+    sphereLightGeometry.worldMatrix.makeIdentity();
+    sphereLightGeometry.worldMatrix.multiply(new Matrix4().makeTranslation(lightPositionRotated)).multiply(scale);
 
     time.update();
     camera.update(time.deltaTime);
@@ -165,6 +202,7 @@ function updateAndRender() {
     groundGeometry.render(camera, projectionMatrix, phongShaderProgram);
     sphereGeometry.render(camera, projectionMatrix, phongShaderProgram);
     barrelGeometry.render(camera, projectionMatrix, phongShaderProgram);
+    sphereLightGeometry.render(camera, projectionMatrix, flatColorShaderProgram);
 }
 
 // EOF 00100001-10
