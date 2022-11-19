@@ -226,7 +226,7 @@ function updateAndRender () {
 	// todo #1 - Set up a camera that points in the direction of the light at a
 	// reasonably close position such that the scene will be in the view volume.
 	// We will set up the view volume boundaries with an orthographics projection later.
-	lightCamera.cameraWorldMatrix.makeLookAt(new Vector3(5,3,0), new Vector3(0,0,0), new Vector3(0,1,0));
+	lightCamera.cameraWorldMatrix.makeLookAt(lightPos, new Vector3(0,0,0), new Vector3(0,1,0));
 	camera.update(time.deltaTime);
 
 	// render scene depth to texture ################## 
