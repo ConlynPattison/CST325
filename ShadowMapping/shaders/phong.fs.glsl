@@ -10,6 +10,27 @@ varying vec2 vTexCoords;
 varying vec3 vWorldNormal;
 varying vec3 vWorldPosition;
 
+float CalcShadowPCF(vec3 lightSpaceUV, float bias) {
+  float dimensions = 2048.0;
+  vec2 texelSize = vec2(1.0/dimensions, 1.0/dimensions);
+
+  float shadowSum = 0.0;
+
+  for (int y = -1 ; y <= 1 ; y++) {
+    for (int x = -1 ; x <= 1 ; x++) {
+     vec2 offset = vec2(x, y) * texelSize;
+     float depth = texture2D(uShadowTexture, lightSpaceUV.xy + offset).x;
+
+     if (depth + bias < lightSpaceUV.z) {
+      shadowSum += 0.0;
+     } else {
+      shadowSum += 1.0;
+     }
+    }
+  }
+  return shadowSum / 9.0;
+}
+
 void main(void) {
   vec3 worldNormal01 = normalize(vWorldNormal);
   vec3 directionToEye01 = normalize(uCameraPosition - vWorldPosition);
@@ -32,28 +53,34 @@ void main(void) {
   vec4 lightSpaceNDC =  uLightVPMatrix * vec4(vWorldPosition, 1.0);
 
   // scale and bias the light-space NDC xy coordinates from [-1, 1] to [0, 1]
-  vec2 lightSpaceUV = (lightSpaceNDC.xy + 1.0) * 0.5;
+  vec3 lightSpaceUV = (lightSpaceNDC.xyz + 1.0) * 0.5;
 
   // todo #6
   // Sample from the shadow map texture using the previously calculated lightSpaceUV
-  vec4 shadowColor = texture2D(uShadowTexture, lightSpaceUV);
+  vec4 shadowColor = texture2D(uShadowTexture, lightSpaceUV.xy);
 
   // todo #7 scale and bias the light-space NDC z coordinate from [-1, 1] to [0, 1]
   float lightDepth = (lightSpaceNDC.z + 1.0) * 0.5;
 
   // use this as part of todo #10
-  float bias = 0.004;
+  float bias = 0.01;
   float closestDepthToLight = shadowColor.z + bias;
 
   // todo #8
   //gl_FragColor = vec4(lightDepth, lightDepth, lightDepth, 1.0);
+  float shadowFactor = CalcShadowPCF(lightSpaceUV, bias);
+  vec3 shadowContribution = shadowFactor * diffuseColor;
+  finalColor = ambient + shadowContribution + specularColor;
 
   //gl_FragColor = vec4(finalColor, 1.0); // remove this when you are ready to add shadows
-  if (lightDepth > closestDepthToLight) {
-    gl_FragColor = vec4(ambient, 1.0);
-  } else {
-     gl_FragColor = vec4(finalColor, 1.0);
-  }
+  // smaller than reqDepth -> more in shadow, larger than reqDepth -> less in shadow
+  // [ambient -> finalColor]
+  // if (shadowFactor < closestDepthToLight) {
+  //   gl_FragColor = vec4(ambient + diffuseColor, 1.0);
+  // } else {
+  //    gl_FragColor = vec4(finalColor, 1.0);
+  // }
+  gl_FragColor = vec4(finalColor, 1.0);
 }
 
 // EOF 00100001-10
