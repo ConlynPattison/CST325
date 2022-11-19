@@ -11,15 +11,16 @@ varying vec3 vWorldNormal;
 varying vec3 vWorldPosition;
 
 float CalcShadowPCF(vec3 lightSpaceUV, float bias) {
-  float dimensions = 2048.0;
+  float dimensions = 2048.0; // wasn't sure how to grab this info from the created texture
   vec2 texelSize = vec2(1.0/dimensions, 1.0/dimensions);
 
   float shadowSum = 0.0;
+  const int TEX_OFFSET = 1;
 
-  for (int y = -1 ; y <= 1 ; y++) {
-    for (int x = -1 ; x <= 1 ; x++) {
+  for (int y = -TEX_OFFSET ; y <= TEX_OFFSET ; y++) {
+    for (int x = -TEX_OFFSET ; x <= TEX_OFFSET ; x++) {
      vec2 offset = vec2(x, y) * texelSize;
-     float depth = texture2D(uShadowTexture, lightSpaceUV.xy + offset).x;
+     float depth = texture2D(uShadowTexture, lightSpaceUV.xy + offset).z;
 
      if (depth + bias < lightSpaceUV.z) {
       shadowSum += 0.0;
@@ -28,7 +29,8 @@ float CalcShadowPCF(vec3 lightSpaceUV, float bias) {
      }
     }
   }
-  return shadowSum / 9.0;
+  float shadowFactor = (shadowSum / pow(float(TEX_OFFSET) * 3.0, 2.0));
+  return shadowFactor;
 }
 
 void main(void) {
@@ -63,23 +65,30 @@ void main(void) {
   float lightDepth = (lightSpaceNDC.z + 1.0) * 0.5;
 
   // use this as part of todo #10
-  float bias = 0.01;
+  float bias = 0.008;
   float closestDepthToLight = shadowColor.z + bias;
 
   // todo #8
+  // if (lightDepth < closestDepthToLight) {
+  //   gl_FragColor = vec4(ambient, 1.0);
+  // } else {
+  //    gl_FragColor = vec4(finalColor, 1.0);
+  // }
   //gl_FragColor = vec4(lightDepth, lightDepth, lightDepth, 1.0);
+
+  // ------------------------------------------------------------------------------------------
+
+  // Bonus -> Percentage Closer Filtering (PCF) - ala OGLDEV's tutorial
   float shadowFactor = CalcShadowPCF(lightSpaceUV, bias);
   vec3 shadowContribution = shadowFactor * diffuseColor;
-  finalColor = ambient + shadowContribution + specularColor;
 
   //gl_FragColor = vec4(finalColor, 1.0); // remove this when you are ready to add shadows
   // smaller than reqDepth -> more in shadow, larger than reqDepth -> less in shadow
   // [ambient -> finalColor]
-  // if (shadowFactor < closestDepthToLight) {
-  //   gl_FragColor = vec4(ambient + diffuseColor, 1.0);
-  // } else {
-  //    gl_FragColor = vec4(finalColor, 1.0);
-  // }
+
+  // opted to scale the diffuse color additive by the shadow factor
+    finalColor = ambient + shadowContribution + specularColor;
+
   gl_FragColor = vec4(finalColor, 1.0);
 }
 
