@@ -277,6 +277,7 @@ Matrix4.prototype = {
 
   // -------------------------------------------------------------------------
   makeLookAt: function(eyePos, targetPos, worldUp) {
+    // params -> vector3
     this.makeIdentity();
     var forward = targetPos.clone().subtract(eyePos).normalize();
     var right = forward.clone().normalize().cross(worldUp).normalize();

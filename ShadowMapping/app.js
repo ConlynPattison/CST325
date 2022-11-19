@@ -226,7 +226,7 @@ function updateAndRender () {
 	// todo #1 - Set up a camera that points in the direction of the light at a
 	// reasonably close position such that the scene will be in the view volume.
 	// We will set up the view volume boundaries with an orthographics projection later.
-	// lightCamera.cameraWorldMatrix.makeLookAt(?, ?, ?);
+	lightCamera.cameraWorldMatrix.makeLookAt(new Vector3(5,3,0), new Vector3(0,0,0), new Vector3(0,1,0));
 	camera.update(time.deltaTime);
 
 	// render scene depth to texture ################## 
@@ -241,7 +241,7 @@ function updateAndRender () {
 	gl.viewport(0, 0, fbo.width, fbo.height);
 
 	// todo #2 - set up the view volume boundaries
-	// shadowProjectionMatrix.makeOrthographic(...);
+	shadowProjectionMatrix.makeOrthographic(-10, 10, 10, -10, 1.0, 20);
 
 	gl.disable(gl.CULL_FACE);
 	groundGeometry.render(lightCamera, shadowProjectionMatrix, depthWriteProgram);
