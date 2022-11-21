@@ -10,28 +10,7 @@ varying vec2 vTexCoords;
 varying vec3 vWorldNormal;
 varying vec3 vWorldPosition;
 
-float CalcShadowPCF(vec3 lightSpaceUV, float bias) {
-  float dimensions = 2048.0; // wasn't sure how to grab this info from the created texture
-  vec2 texelSize = vec2(1.0/dimensions, 1.0/dimensions);
-
-  float shadowSum = 0.0;
-  const int TEX_OFFSET = 1;
-
-  for (int y = -TEX_OFFSET ; y <= TEX_OFFSET ; y++) {
-    for (int x = -TEX_OFFSET ; x <= TEX_OFFSET ; x++) {
-     vec2 offset = vec2(x, y) * texelSize;
-     float depth = texture2D(uShadowTexture, lightSpaceUV.xy + offset).z;
-
-     if (depth + bias < lightSpaceUV.z) {
-      shadowSum += 0.0;
-     } else {
-      shadowSum += 1.0;
-     }
-    }
-  }
-  float shadowFactor = (shadowSum / pow(float(TEX_OFFSET) * 3.0, 2.0));
-  return shadowFactor;
-}
+float CalcShadowPCF(vec3 lightSpaceUV, float bias);
 
 void main(void) {
   vec3 worldNormal01 = normalize(vWorldNormal);
@@ -78,18 +57,42 @@ void main(void) {
 
   // ------------------------------------------------------------------------------------------
 
-  // Bonus -> Percentage Closer Filtering (PCF) - ala OGLDEV's tutorial
-  float shadowFactor = CalcShadowPCF(lightSpaceUV, bias);
-  vec3 shadowContribution = shadowFactor * diffuseColor;
+  // Bonus -> Percentage Closer Filtering (PCF) - ala OGLDEV's tutorial for help
+  
 
   //gl_FragColor = vec4(finalColor, 1.0); // remove this when you are ready to add shadows
   // smaller than reqDepth -> more in shadow, larger than reqDepth -> less in shadow
   // [ambient -> finalColor]
 
   // opted to scale the diffuse color additive by the shadow factor
-    finalColor = ambient + shadowContribution + specularColor;
+  float shadowFactor = CalcShadowPCF(lightSpaceUV, bias);
+  vec3 shadowContribution = shadowFactor * diffuseColor;
+  finalColor = ambient + shadowContribution + specularColor;
 
   gl_FragColor = vec4(finalColor, 1.0);
+}
+
+float CalcShadowPCF(vec3 lightSpaceUV, float bias) {
+  float dimensions = 2048.0; // wasn't sure how to grab this info from the created texture
+  vec2 texelSize = vec2(1.0/dimensions, 1.0/dimensions);
+
+  float shadowSum = 0.0;
+  const int TEX_OFFSET = 1;
+
+  for (int y = -TEX_OFFSET ; y <= TEX_OFFSET ; y++) {
+    for (int x = -TEX_OFFSET ; x <= TEX_OFFSET ; x++) {
+     vec2 offset = vec2(x, y) * texelSize;
+     float depth = texture2D(uShadowTexture, lightSpaceUV.xy + offset).z;
+
+     if (depth + bias < lightSpaceUV.z) {
+      shadowSum += 0.0;
+     } else {
+      shadowSum += 1.0;
+     }
+    }
+  }
+  float shadowFactor = (shadowSum / pow(float(TEX_OFFSET) * 3.0, 2.0));
+  return shadowFactor;
 }
 
 // EOF 00100001-10
