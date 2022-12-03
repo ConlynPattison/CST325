@@ -39,7 +39,9 @@ var loadedAssets = {
     marbleImage: null, barrelImage: null,
     crackedMudImage: null, sunImage: null,
     mercuryImage: null, venusImage: null,
-    earthImage: null
+    earthImage: null, marsImage: null,
+    jupiterImage: null, saturnImage: null,
+    uranusImage: null, neptuneImage: null
 };
 
 // -------------------------------------------------------------------------
@@ -87,7 +89,12 @@ function loadAssets(onLoadedCB) {
         loadImage('./data/sun.jpg'),
         loadImage('./data/mercury.jpg'),
         loadImage('./data/venus.jpg'),
-        loadImage('./data/earth.jpg')
+        loadImage('./data/earth.jpg'),
+        loadImage('./data/mars.jpg'),
+        loadImage('./data/jupiter.jpg'),
+        loadImage('./data/saturn.jpg'),
+        loadImage('./data/uranus.jpg'),
+        loadImage('./data/neptune.jpg')
     ];
 
     Promise.all(filePromises).then(function(values) {
@@ -107,6 +114,11 @@ function loadAssets(onLoadedCB) {
         loadedAssets.mercuryImage = values[12];
         loadedAssets.venusImage = values[13];
         loadedAssets.earthImage = values[14];
+        loadedAssets.marsImage = values[15];
+        loadedAssets.jupiterImage = values[16];
+        loadedAssets.saturnImage = values[17];
+        loadedAssets.uranusImage = values[18];
+        loadedAssets.neptuneImage = values[19];
     }).catch(function(error) {
         console.error(error.message);
     }).finally(function() {
@@ -217,6 +229,41 @@ function createScene() {
     translation = new Matrix4().makeTranslation(15.0, 0.0, 0.0)
     planets.earth.worldMatrix.makeIdentity();
     planets.earth.worldMatrix.multiply(translation).multiply(scale);
+
+    planets.mars = new WebGLGeometryJSON(gl, phongShaderProgram);
+    planets.mars.create(loadedAssets.sphereJSON, loadedAssets.marsImage);
+    scale = new Matrix4().makeScale(0.01, 0.01, 0.01);
+    var translation = new Matrix4().makeTranslation(20.0, 0.0, 0.0);
+    planets.mars.worldMatrix.makeIdentity();
+    planets.mars.worldMatrix.multiply(translation).multiply(scale);
+
+    planets.jupiter = new WebGLGeometryJSON(gl, phongShaderProgram);
+    planets.jupiter.create(loadedAssets.sphereJSON, loadedAssets.jupiterImage);
+    scale = new Matrix4().makeScale(0.01, 0.01, 0.01);
+    translation = new Matrix4().makeTranslation(25.0, 0.0, 0.0)
+    planets.jupiter.worldMatrix.makeIdentity();
+    planets.jupiter.worldMatrix.multiply(translation).multiply(scale);
+
+    planets.saturn = new WebGLGeometryJSON(gl, phongShaderProgram);
+    planets.saturn.create(loadedAssets.sphereJSON, loadedAssets.saturnImage);
+    scale = new Matrix4().makeScale(0.01, 0.01, 0.01);
+    translation = new Matrix4().makeTranslation(30.0, 0.0, 0.0)
+    planets.saturn.worldMatrix.makeIdentity();
+    planets.saturn.worldMatrix.multiply(translation).multiply(scale);
+
+    planets.uranus = new WebGLGeometryJSON(gl, phongShaderProgram);
+    planets.uranus.create(loadedAssets.sphereJSON, loadedAssets.uranusImage);
+    scale = new Matrix4().makeScale(0.01, 0.01, 0.01);
+    var translation = new Matrix4().makeTranslation(35.0, 0.0, 0.0);
+    planets.uranus.worldMatrix.makeIdentity();
+    planets.uranus.worldMatrix.multiply(translation).multiply(scale);
+
+    planets.neptune = new WebGLGeometryJSON(gl, phongShaderProgram);
+    planets.neptune.create(loadedAssets.sphereJSON, loadedAssets.neptuneImage);
+    scale = new Matrix4().makeScale(0.01, 0.01, 0.01);
+    translation = new Matrix4().makeTranslation(40.0, 0.0, 0.0)
+    planets.neptune.worldMatrix.makeIdentity();
+    planets.neptune.worldMatrix.multiply(translation).multiply(scale);
 }
 
 // -------------------------------------------------------------------------
@@ -261,6 +308,11 @@ function updateAndRender() {
     planets.mercury.render(camera, projectionMatrix, phongShaderProgram);
     planets.venus.render(camera, projectionMatrix, phongShaderProgram);
     planets.earth.render(camera, projectionMatrix, phongShaderProgram);
+    planets.mars.render(camera, projectionMatrix, phongShaderProgram);
+    planets.jupiter.render(camera, projectionMatrix, phongShaderProgram);
+    planets.saturn.render(camera, projectionMatrix, phongShaderProgram);
+    planets.uranus.render(camera, projectionMatrix, phongShaderProgram);
+    planets.neptune.render(camera, projectionMatrix, phongShaderProgram);
 
 
 }
