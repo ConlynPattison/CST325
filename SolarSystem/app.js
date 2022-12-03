@@ -143,7 +143,7 @@ function createScene() {
     // Scaled it down so that the diameter is 3
     var scale = new Matrix4().makeScale(0.03, 0.03, 0.03);
     // raise it by the radius to make it sit on the ground
-    var translation = new Matrix4().makeTranslation(0, 1.5, 0);
+    var translation = new Matrix4().makeTranslation(0, 1.5, 8);
 
     sphereGeometry.worldMatrix.makeIdentity();
     sphereGeometry.worldMatrix.multiply(translation).multiply(scale);
