@@ -37,7 +37,9 @@ var loadedAssets = {
     emissiveVS: null, emissiveFS: null,
     sphereJSON: null, barrelJSON: null,
     marbleImage: null, barrelImage: null,
-    crackedMudImage: null, sunImage: null
+    crackedMudImage: null, sunImage: null,
+    mercuryImage: null, venusImage: null,
+    earthImage: null
 };
 
 // -------------------------------------------------------------------------
@@ -82,7 +84,10 @@ function loadAssets(onLoadedCB) {
         loadImage('./data/marble.jpg'),
         loadImage('./data/barrel.png'),
         loadImage('./data/crackedMud.png'),
-        loadImage('./data/sun.jpg')
+        loadImage('./data/sun.jpg'),
+        loadImage('./data/mercury.jpg'),
+        loadImage('./data/venus.jpg'),
+        loadImage('./data/earth.jpg')
     ];
 
     Promise.all(filePromises).then(function(values) {
@@ -99,6 +104,9 @@ function loadAssets(onLoadedCB) {
         loadedAssets.barrelImage = values[9];
         loadedAssets.crackedMudImage = values[10];
         loadedAssets.sunImage = values[11];
+        loadedAssets.mercuryImage = values[12];
+        loadedAssets.venusImage = values[13];
+        loadedAssets.earthImage = values[14];
     }).catch(function(error) {
         console.error(error.message);
     }).finally(function() {
@@ -166,29 +174,10 @@ function createScene() {
     var scale = new Matrix4().makeScale(10.0, 10.0, 10.0);
     // compensate for the model being flipped on its side
     var rotation = new Matrix4().makeRotationX(-90);
+    var translation = new Matrix4().makeTranslation(0.0, -5.0, 0.0)
 
     groundGeometry.worldMatrix.makeIdentity();
-    groundGeometry.worldMatrix.multiply(rotation).multiply(scale);
-
-    sphereGeometry = new WebGLGeometryJSON(gl, phongShaderProgram);
-    sphereGeometry.create(loadedAssets.sphereJSON, loadedAssets.sunImage);
-
-    // Scaled it down so that the diameter is 3
-    var scale = new Matrix4().makeScale(0.03, 0.03, 0.03);
-    // raise it by the radius to make it sit on the ground
-    var translation = new Matrix4().makeTranslation(0, 1.5, 8);
-
-    sphereGeometry.worldMatrix.makeIdentity();
-    sphereGeometry.worldMatrix.multiply(translation).multiply(scale);
-
-    barrelGeometry = new WebGLGeometryJSON(gl, phongShaderProgram);
-    barrelGeometry.create(loadedAssets.barrelJSON, loadedAssets.barrelImage);
-
-    var scale = new Matrix4().makeScale(0.3, 0.3, 0.3);
-    var translation = new Matrix4().makeTranslation(-5, 2, -5);
-
-    barrelGeometry.worldMatrix.makeIdentity();
-    barrelGeometry.worldMatrix.multiply(translation).multiply(scale);
+    groundGeometry.worldMatrix.multiply(translation).multiply(rotation).multiply(scale);
 
     sphereLightGeometry = new WebGLGeometryJSON(gl, flatColorShaderProgram);
     sphereLightGeometry.create(loadedAssets.sphereJSON)
@@ -208,7 +197,26 @@ function createScene() {
     sun.worldMatrix.makeIdentity();
     sun.worldMatrix.multiply(scale);
 
+    planets.mercury = new WebGLGeometryJSON(gl, phongShaderProgram);
+    planets.mercury.create(loadedAssets.sphereJSON, loadedAssets.mercuryImage);
+    scale = new Matrix4().makeScale(0.01, 0.01, 0.01);
+    var translation = new Matrix4().makeTranslation(5.0, 0.0, 0.0);
+    planets.mercury.worldMatrix.makeIdentity();
+    planets.mercury.worldMatrix.multiply(translation).multiply(scale);
 
+    planets.venus = new WebGLGeometryJSON(gl, phongShaderProgram);
+    planets.venus.create(loadedAssets.sphereJSON, loadedAssets.venusImage);
+    scale = new Matrix4().makeScale(0.01, 0.01, 0.01);
+    translation = new Matrix4().makeTranslation(10.0, 0.0, 0.0)
+    planets.venus.worldMatrix.makeIdentity();
+    planets.venus.worldMatrix.multiply(translation).multiply(scale);
+
+    planets.earth = new WebGLGeometryJSON(gl, phongShaderProgram);
+    planets.earth.create(loadedAssets.sphereJSON, loadedAssets.earthImage);
+    scale = new Matrix4().makeScale(0.01, 0.01, 0.01);
+    translation = new Matrix4().makeTranslation(15.0, 0.0, 0.0)
+    planets.earth.worldMatrix.makeIdentity();
+    planets.earth.worldMatrix.multiply(translation).multiply(scale);
 }
 
 // -------------------------------------------------------------------------
@@ -246,12 +254,15 @@ function updateAndRender() {
 
     projectionMatrix.makePerspective(45, aspectRatio, 0.1, 1000);
     groundGeometry.render(camera, projectionMatrix, phongShaderProgram);
-    sphereGeometry.render(camera, projectionMatrix, phongShaderProgram);
-    barrelGeometry.render(camera, projectionMatrix, phongShaderProgram);
     sphereLightGeometry.render(camera, projectionMatrix, flatColorShaderProgram);
 
     // ---------------------- FINAL PART --------------------------------
     sun.render(camera, projectionMatrix, emissiveShaderProgram);
+    planets.mercury.render(camera, projectionMatrix, phongShaderProgram);
+    planets.venus.render(camera, projectionMatrix, phongShaderProgram);
+    planets.earth.render(camera, projectionMatrix, phongShaderProgram);
+
+
 }
 
 // EOF 00100001-10
