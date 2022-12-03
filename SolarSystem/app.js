@@ -64,11 +64,14 @@ function loadAssets(onLoadedCB) {
         fetch('./shaders/phong.pointlit.fs.glsl').then((response) => { return response.text(); }),
         fetch('./shaders/flat.color.vs.glsl').then((response) => { return response.text(); }),
         fetch('./shaders/flat.color.fs.glsl').then((response) => { return response.text(); }),
+        fetch('./shaders/emissive.vs.glsl').then((response) => { return response.text(); }),
+        fetch('./shaders/emissive.fs.glsl').then((response) => { return response.text(); }),
         fetch('./data/sphere.json').then((response) => { return response.json(); }),
         fetch('./data/barrel.json').then((response) => { return response.json(); }),
         loadImage('./data/marble.jpg'),
         loadImage('./data/barrel.png'),
-        loadImage('./data/crackedMud.png')
+        loadImage('./data/crackedMud.png'),
+        loadImage('./data/sun.jpg')
     ];
 
     Promise.all(filePromises).then(function(values) {
@@ -77,11 +80,14 @@ function loadAssets(onLoadedCB) {
         loadedAssets.phongTextFS = values[1];
         loadedAssets.flatTextVS = values[2];
         loadedAssets.flatTextFS = values[3];
-        loadedAssets.sphereJSON = values[4];
-        loadedAssets.barrelJSON = values[5];
-        loadedAssets.marbleImage = values[6];
-        loadedAssets.barrelImage = values[7];
-        loadedAssets.crackedMudImage = values[8];
+        loadedAssets.emissiveVS = values[4];
+        loadedAssets.emissiveFS = values[5];
+        loadedAssets.sphereJSON = values[6];
+        loadedAssets.barrelJSON = values[7];
+        loadedAssets.marbleImage = values[8];
+        loadedAssets.barrelImage = values[9];
+        loadedAssets.crackedMudImage = values[10];
+        loadedAssets.sunImage = values[11];
     }).catch(function(error) {
         console.error(error.message);
     }).finally(function() {
@@ -138,7 +144,7 @@ function createScene() {
     groundGeometry.worldMatrix.multiply(rotation).multiply(scale);
 
     sphereGeometry = new WebGLGeometryJSON(gl, phongShaderProgram);
-    sphereGeometry.create(loadedAssets.sphereJSON, loadedAssets.marbleImage);
+    sphereGeometry.create(loadedAssets.sphereJSON, loadedAssets.sunImage);
 
     // Scaled it down so that the diameter is 3
     var scale = new Matrix4().makeScale(0.03, 0.03, 0.03);
