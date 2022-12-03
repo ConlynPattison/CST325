@@ -11,12 +11,21 @@ var barrelGeometry = null;
 var groundGeometry = null;
 var sphereLightGeometry = null;
 
+var sun = null;
+var planets = {
+    mercury: null, venus: null,
+    earth: null, mars: null,
+    jupiter: null, saturn: null,
+    uranus: null, neptune: null
+};
+
 var projectionMatrix = new Matrix4();
 var lightPosition = new Vector3(4, 1.5, 0);
 
 // the shader that will be used by each piece of geometry (they could each use their own shader but in this case it will be the same)
 var phongShaderProgram;
 var flatColorShaderProgram;
+var emissiveShaderProgram;
 
 // auto start the app when the html page is ready
 window.onload = window['initializeAndStartRendering'];
@@ -24,9 +33,11 @@ window.onload = window['initializeAndStartRendering'];
 // we need to asynchronously fetch files from the "server" (your local hard drive)
 var loadedAssets = {
     phongTextVS: null, phongTextFS: null,
+    flatTextVS: null, flatTextFS: null,
+    emissiveVS: null, emissiveFS: null,
     sphereJSON: null, barrelJSON: null,
     marbleImage: null, barrelImage: null,
-    crackedMudImage: null
+    crackedMudImage: null, sunImage: null
 };
 
 // -------------------------------------------------------------------------
@@ -99,6 +110,7 @@ function loadAssets(onLoadedCB) {
 function createShaders(loadedAssets) {
     phongShaderProgram = createCompiledAndLinkedShaderProgram(loadedAssets.phongTextVS, loadedAssets.phongTextFS);
     flatColorShaderProgram = createCompiledAndLinkedShaderProgram(loadedAssets.flatTextVS, loadedAssets.flatTextFS);
+    emissiveShaderProgram = createCompiledAndLinkedShaderProgram(loadedAssets.emissiveVS, loadedAssets.emissiveFS);
 
     phongShaderProgram.attributes = {
         vertexPositionAttribute: gl.getAttribLocation(phongShaderProgram, "aVertexPosition"),
@@ -128,6 +140,21 @@ function createShaders(loadedAssets) {
         lightPositionUniform: gl.getUniformLocation(flatColorShaderProgram, "uLightPosition"),
         cameraPositionUniform: gl.getUniformLocation(flatColorShaderProgram, "uCameraPosition"),
         textureUniform: gl.getUniformLocation(flatColorShaderProgram, "uTexture"),
+    };
+
+    emissiveShaderProgram.attributes = {
+        vertexPositionAttribute: gl.getAttribLocation(emissiveShaderProgram, "aVertexPosition"),
+        vertexNormalsAttribute: gl.getAttribLocation(emissiveShaderProgram, "aNormal"),
+        vertexTexcoordsAttribute: gl.getAttribLocation(emissiveShaderProgram, "aTexcoords")
+    };
+
+    emissiveShaderProgram.uniforms = {
+        worldMatrixUniform: gl.getUniformLocation(emissiveShaderProgram, "uWorldMatrix"),
+        viewMatrixUniform: gl.getUniformLocation(emissiveShaderProgram, "uViewMatrix"),
+        projectionMatrixUniform: gl.getUniformLocation(emissiveShaderProgram, "uProjectionMatrix"),
+        lightPositionUniform: gl.getUniformLocation(emissiveShaderProgram, "uLightPosition"),
+        cameraPositionUniform: gl.getUniformLocation(emissiveShaderProgram, "uCameraPosition"),
+        textureUniform: gl.getUniformLocation(emissiveShaderProgram, "uTexture"),
     };
 }
 
@@ -173,6 +200,15 @@ function createScene() {
 
     sphereLightGeometry.worldMatrix.makeIdentity();
     sphereLightGeometry.worldMatrix.multiply(translation).multiply(scale);
+
+    // ---------------------- FINAL PART --------------------------------
+    sun = new WebGLGeometryJSON(gl, emissiveShaderProgram);
+    sun.create(loadedAssets.sphereJSON, loadedAssets.sunImage);
+    var scale = new Matrix4().makeScale(0.03, 0.03, 0.03);
+    sun.worldMatrix.makeIdentity();
+    sun.worldMatrix.multiply(scale);
+
+
 }
 
 // -------------------------------------------------------------------------
@@ -213,6 +249,9 @@ function updateAndRender() {
     sphereGeometry.render(camera, projectionMatrix, phongShaderProgram);
     barrelGeometry.render(camera, projectionMatrix, phongShaderProgram);
     sphereLightGeometry.render(camera, projectionMatrix, flatColorShaderProgram);
+
+    // ---------------------- FINAL PART --------------------------------
+    sun.render(camera, projectionMatrix, emissiveShaderProgram);
 }
 
 // EOF 00100001-10
