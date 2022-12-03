@@ -44,7 +44,7 @@ void main(void) {
     // add "diffuseColor" and "specularColor" when ready
     vec3 finalColor = ambient + diffuseColor + specularColor;
 
-    gl_FragColor = vec4(finalColor, 1.0);
+    gl_FragColor = vec4(diffuseColor, 1.0);
     //gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
 }
 
