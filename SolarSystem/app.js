@@ -19,6 +19,13 @@ var planets = {
     uranus: null, neptune: null
 };
 
+var cube = {
+    top: null, side1: null,
+    side2: null, side3: null,
+    side4: null, bottom: null
+}
+var cubeScale = 100.0;
+
 var projectionMatrix = new Matrix4();
 var lightPosition = new Vector3(4, 1.5, 0);
 
@@ -41,7 +48,8 @@ var loadedAssets = {
     mercuryImage: null, venusImage: null,
     earthImage: null, marsImage: null,
     jupiterImage: null, saturnImage: null,
-    uranusImage: null, neptuneImage: null
+    uranusImage: null, neptuneImage: null,
+    skyImage: null
 };
 
 // -------------------------------------------------------------------------
@@ -94,7 +102,9 @@ function loadAssets(onLoadedCB) {
         loadImage('./data/jupiter.jpg'),
         loadImage('./data/saturn.jpg'),
         loadImage('./data/uranus.jpg'),
-        loadImage('./data/neptune.jpg')
+        loadImage('./data/neptune.jpg'),
+        loadImage('./data/stars.jpeg')
+
     ];
 
     Promise.all(filePromises).then(function(values) {
@@ -119,6 +129,8 @@ function loadAssets(onLoadedCB) {
         loadedAssets.saturnImage = values[17];
         loadedAssets.uranusImage = values[18];
         loadedAssets.neptuneImage = values[19];
+        loadedAssets.skyImage = values[20];
+
     }).catch(function(error) {
         console.error(error.message);
     }).finally(function() {
@@ -182,12 +194,10 @@ function createShaders(loadedAssets) {
 function createScene() {
     groundGeometry = new WebGLGeometryQuad(gl, phongShaderProgram);
     groundGeometry.create(loadedAssets.crackedMudImage);
-
     var scale = new Matrix4().makeScale(10.0, 10.0, 10.0);
     // compensate for the model being flipped on its side
     var rotation = new Matrix4().makeRotationX(-90);
     var translation = new Matrix4().makeTranslation(0.0, -5.0, 0.0)
-
     groundGeometry.worldMatrix.makeIdentity();
     groundGeometry.worldMatrix.multiply(translation).multiply(rotation).multiply(scale);
 
@@ -264,6 +274,54 @@ function createScene() {
     translation = new Matrix4().makeTranslation(40.0, 0.0, 0.0)
     planets.neptune.worldMatrix.makeIdentity();
     planets.neptune.worldMatrix.multiply(translation).multiply(scale);
+
+    cube.bottom = new WebGLGeometryQuad(gl, emissiveShaderProgram);
+    cube.bottom.create(loadedAssets.skyImage);
+    scale = new Matrix4().makeScale(cubeScale, cubeScale, cubeScale);
+    var rotation = new Matrix4().makeRotationX(-90);
+    translation = new Matrix4().makeTranslation(0.0, -cubeScale, 0.0, 0.0);
+    cube.bottom.worldMatrix.makeIdentity();
+    cube.bottom.worldMatrix.multiply(translation).multiply(rotation).multiply(scale);
+
+    cube.top = new WebGLGeometryQuad(gl, emissiveShaderProgram);
+    cube.top.create(loadedAssets.skyImage);
+    scale = new Matrix4().makeScale(cubeScale, cubeScale, cubeScale);
+    rotation = new Matrix4().makeRotationX(-90);
+    translation = new Matrix4().makeTranslation(0.0, cubeScale, 0.0, 0.0);
+    cube.top.worldMatrix.makeIdentity();
+    cube.top.worldMatrix.multiply(translation).multiply(rotation).multiply(scale);
+
+    cube.side1 = new WebGLGeometryQuad(gl, emissiveShaderProgram);
+    cube.side1.create(loadedAssets.skyImage);
+    scale = new Matrix4().makeScale(cubeScale, cubeScale, cubeScale);
+    rotation = new Matrix4().makeRotationX(0);
+    translation = new Matrix4().makeTranslation(0.0, 0.0, -cubeScale, 0.0);
+    cube.side1.worldMatrix.makeIdentity();
+    cube.side1.worldMatrix.multiply(translation).multiply(rotation).multiply(scale);
+
+    cube.side2 = new WebGLGeometryQuad(gl, emissiveShaderProgram);
+    cube.side2.create(loadedAssets.skyImage);
+    scale = new Matrix4().makeScale(cubeScale, cubeScale, cubeScale);
+    rotation = new Matrix4().makeRotationX(0);
+    translation = new Matrix4().makeTranslation(0.0, 0.0, cubeScale, 0.0);
+    cube.side2.worldMatrix.makeIdentity();
+    cube.side2.worldMatrix.multiply(translation).multiply(rotation).multiply(scale);
+
+    cube.side3 = new WebGLGeometryQuad(gl, emissiveShaderProgram);
+    cube.side3.create(loadedAssets.skyImage);
+    scale = new Matrix4().makeScale(cubeScale, cubeScale, cubeScale);
+    rotation = new Matrix4().makeRotationY(90);
+    translation = new Matrix4().makeTranslation(-cubeScale, 0.0, 0.0, 0.0);
+    cube.side3.worldMatrix.makeIdentity();
+    cube.side3.worldMatrix.multiply(translation).multiply(rotation).multiply(scale);
+
+    cube.side4 = new WebGLGeometryQuad(gl, emissiveShaderProgram);
+    cube.side4.create(loadedAssets.skyImage);
+    scale = new Matrix4().makeScale(cubeScale, cubeScale, cubeScale);
+    rotation = new Matrix4().makeRotationY(90);
+    translation = new Matrix4().makeTranslation(cubeScale, 0.0, 0.0, 0.0);
+    cube.side4.worldMatrix.makeIdentity();
+    cube.side4.worldMatrix.multiply(translation).multiply(rotation).multiply(scale);
 }
 
 // -------------------------------------------------------------------------
@@ -300,11 +358,12 @@ function updateAndRender() {
     gl.uniform3f(uniforms.cameraPositionUniform, cameraPosition.x, cameraPosition.y, cameraPosition.z);
 
     projectionMatrix.makePerspective(45, aspectRatio, 0.1, 1000);
-    groundGeometry.render(camera, projectionMatrix, phongShaderProgram);
+    //groundGeometry.render(camera, projectionMatrix, phongShaderProgram);
     sphereLightGeometry.render(camera, projectionMatrix, flatColorShaderProgram);
 
     // ---------------------- FINAL PART --------------------------------
     sun.render(camera, projectionMatrix, emissiveShaderProgram);
+
     planets.mercury.render(camera, projectionMatrix, phongShaderProgram);
     planets.venus.render(camera, projectionMatrix, phongShaderProgram);
     planets.earth.render(camera, projectionMatrix, phongShaderProgram);
@@ -314,6 +373,12 @@ function updateAndRender() {
     planets.uranus.render(camera, projectionMatrix, phongShaderProgram);
     planets.neptune.render(camera, projectionMatrix, phongShaderProgram);
 
+    cube.bottom.render(camera, projectionMatrix, emissiveShaderProgram);
+    cube.top.render(camera, projectionMatrix, emissiveShaderProgram);
+    cube.side1.render(camera, projectionMatrix, emissiveShaderProgram);
+    cube.side2.render(camera, projectionMatrix, emissiveShaderProgram);
+    cube.side3.render(camera, projectionMatrix, emissiveShaderProgram);
+    cube.side4.render(camera, projectionMatrix, emissiveShaderProgram);
 
 }
 
