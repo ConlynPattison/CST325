@@ -36,7 +36,7 @@ void main(void) {
 
     vec3 albedo = texture2D(uTexture, vTexcoords).rgb;
 
-    vec3 ambient = albedo * 0.1;
+    vec3 ambient = albedo * 0.5;
     vec3 diffuseColor = materialLight;
     vec3 specularColor = materialLightPhong;
 
@@ -44,7 +44,7 @@ void main(void) {
     // add "diffuseColor" and "specularColor" when ready
     vec3 finalColor = ambient + diffuseColor + specularColor;
 
-    gl_FragColor = vec4(diffuseColor, 1.0);
+    gl_FragColor = vec4(diffuseColor+ambient, 1.0);
     //gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
 }
 

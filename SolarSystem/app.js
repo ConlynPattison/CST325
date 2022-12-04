@@ -6,11 +6,6 @@ var appInput = new Input();
 var time = new Time();
 var camera = new OrbitCamera(appInput);
 
-var sphereGeometry = null; // this will be created after loading from a file
-var barrelGeometry = null;
-var groundGeometry = null;
-var sphereLightGeometry = null;
-
 var sun = null;
 var planets = {
     mercury: null, venus: null,
@@ -23,8 +18,62 @@ var cube = {
     top: null, side1: null,
     side2: null, side3: null,
     side4: null, bottom: null
+};
+var cubeScale = 1250.0;
+
+var timeFactor = 10.0;
+var scaleFactor = 0.001;  // shared among calculations
+var distanceFactor = 1.0;
+
+var diameters = {  // diameter, thousand miles (altered beyond reality for ease of viewing)
+    sun: 250.0,
+    mercury: 30.0,
+    venus: 70.5,
+    earth: 70.9,
+    mars: 40.2,
+    jupiter: 88.7,
+    saturn: 74.6,
+    uranus: 32.6,
+    neptune: 30.2,
+    moon: 20.1
+};
+
+var distances = {
+    mercury: 35,
+    venus: 67,
+    earth: 93,
+    mars: 142,
+    jupiter: 484,
+    saturn: 889,
+    uranus: 1790,
+    neptune: 2880,
+    moon: 0.2389
 }
-var cubeScale = 100.0;
+
+var orbitFactor = { // 1 / Earth years req for planetary year
+    mercury: 1 / 0.241,
+    venus: 1 / 0.616,
+    earth: 1.0,
+    mars: 1 / 1.88,
+    jupiter: 1 / 12,
+    saturn: 1 / 30,
+    uranus: 1 / 84,
+    neptune: 1 / 165,
+    moon: 1 / 0.073
+}
+
+var spinFactor = { // 1 / Earth days req for planetary day
+    sun: 1 / 27,
+    mercury: 1 / 58,
+    venus: 1 / 116,
+    earth: 1.0,
+    mars: 1 / 1.026,
+    jupiter: 1 / 0.4,
+    saturn: 1 / 0.425,
+    uranus: 1 / 0.746,
+    neptune: 1 / 0.795,
+    moon: 1 / 27
+}
 
 var projectionMatrix = new Matrix4();
 var lightPosition = new Vector3(0, 0, 0);
@@ -196,7 +245,7 @@ function createScene() {
     // ---------------------- FINAL PART --------------------------------
     sun = new WebGLGeometryJSON(gl, emissiveShaderProgram);
     sun.create(loadedAssets.sphereJSON, loadedAssets.sunImage);
-    var scale = new Matrix4().makeScale(0.03, 0.03, 0.03);
+    var scale = new Matrix4().makeScale(scaleFactor * diameters.sun, scaleFactor * diameters.sun, scaleFactor * diameters.sun);
     sun.worldMatrix.makeIdentity();
     sun.worldMatrix.multiply(scale);
 
@@ -310,14 +359,10 @@ function updateAndRender() {
     requestAnimationFrame(updateAndRender);
 
     var aspectRatio = gl.canvasWidth / gl.canvasHeight;
-
     time.update();
     camera.update(time.deltaTime);
 
-    // specify what portion of the canvas we want to draw to (all of it, full width and height)
     gl.viewport(0, 0, gl.canvasWidth, gl.canvasHeight);
-
-    // this is a new frame so let's clear out whatever happened last frame
     gl.clearColor(0.707, 0.707, 1, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -327,9 +372,51 @@ function updateAndRender() {
     gl.uniform3f(uniforms.lightPositionUniform, lightPosition.x, lightPosition.y, lightPosition.z);
     gl.uniform3f(uniforms.cameraPositionUniform, cameraPosition.x, cameraPosition.y, cameraPosition.z);
 
-    projectionMatrix.makePerspective(45, aspectRatio, 0.1, 1000);
+    projectionMatrix.makePerspective(45, aspectRatio, 0.1, 4000);
 
     // ---------------------- FINAL PART --------------------------------
+    // -- update --
+    // orbit <- translate <- spin <- scale <- identity
+    var orbit = new Matrix4().makeRotationY(time.secondsElapsedSinceStart * timeFactor * orbitFactor.earth);
+    var localSpin = new Matrix4().makeRotationY(time.secondsElapsedSinceStart * timeFactor);
+    var translation = new Matrix4().makeTranslation(distanceFactor * distances.earth, 0.0, 0.0);
+    var scale = new Matrix4().makeScale(scaleFactor * diameters.earth, scaleFactor * diameters.earth, scaleFactor * diameters.earth);
+    planets.earth.worldMatrix.makeIdentity();
+    planets.earth.worldMatrix.multiply(orbit).multiply(translation).multiply(localSpin).multiply(scale);
+
+    orbit.makeRotationY(time.secondsElapsedSinceStart * timeFactor * orbitFactor.venus);
+    localSpin.makeRotationY(time.secondsElapsedSinceStart * timeFactor * spinFactor.venus);
+    translation.makeTranslation(distanceFactor * distances.venus, 0.0, 0.0);
+    scale.makeScale(scaleFactor * diameters.venus, scaleFactor * diameters.venus, scaleFactor * diameters.venus);
+    planets.venus.worldMatrix.makeIdentity();
+    planets.venus.worldMatrix.multiply(orbit).multiply(translation).multiply(localSpin).multiply(scale);
+
+    orbit.makeRotationY(time.secondsElapsedSinceStart * timeFactor * orbitFactor.mercury);
+    localSpin.makeRotationY(time.secondsElapsedSinceStart * timeFactor * spinFactor.mercury);
+    translation.makeTranslation(distanceFactor * distances.mercury, 0.0, 0.0);
+    scale.makeScale(scaleFactor * diameters.mercury, scaleFactor * diameters.mercury, scaleFactor * diameters.mercury);
+    planets.mercury.worldMatrix.makeIdentity();
+    planets.mercury.worldMatrix.multiply(orbit).multiply(translation).multiply(localSpin).multiply(scale);
+
+    orbit.makeRotationY(time.secondsElapsedSinceStart * timeFactor * orbitFactor.mars);
+    localSpin.makeRotationY(time.secondsElapsedSinceStart * timeFactor * spinFactor.mars);
+    translation.makeTranslation(distanceFactor * distances.mars, 0.0, 0.0);
+    scale.makeScale(scaleFactor * diameters.mars, scaleFactor * diameters.mars, scaleFactor * diameters.mars);
+    planets.mars.worldMatrix.makeIdentity();
+    planets.mars.worldMatrix.multiply(orbit).multiply(translation).multiply(localSpin).multiply(scale);
+
+    orbit.makeRotationY(time.secondsElapsedSinceStart * timeFactor * orbitFactor.jupiter);
+    localSpin.makeRotationY(time.secondsElapsedSinceStart * timeFactor * spinFactor.jupiter);
+    translation.makeTranslation(distanceFactor * distances.jupiter, 0.0, 0.0);
+    scale.makeScale(scaleFactor * diameters.jupiter, scaleFactor * diameters.jupiter, scaleFactor * diameters.jupiter);
+    planets.jupiter.worldMatrix.makeIdentity();
+    planets.jupiter.worldMatrix.multiply(orbit).multiply(translation).multiply(localSpin).multiply(scale);
+
+
+
+
+
+    // -- render --
     sun.render(camera, projectionMatrix, emissiveShaderProgram);
 
     planets.mercury.render(camera, projectionMatrix, phongShaderProgram);

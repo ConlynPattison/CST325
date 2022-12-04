@@ -4,7 +4,7 @@ function OrbitCamera(input) {
     this.yawDegrees = 0;
     this.pitchDegrees = -45;
     this.minDistance = 1;
-    this.maxDistance = 30;
+    this.maxDistance = 1000;
     this.zoomScale = 1;
 
     var lastMouseX = 0;
