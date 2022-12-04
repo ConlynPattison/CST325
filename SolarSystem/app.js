@@ -479,10 +479,10 @@ function updateAndRender() {
 
     gl.disable(gl.BLEND);
 
-    if (appInput.a && camera.cameraTarget == centerVec4) {
+    if (appInput.a) {
         followEarth = true;
     }
-    if (appInput.d && camera.cameraTarget != centerVec4) {
+    if (appInput.d) {
         followEarth = false;
         camera.cameraTarget = centerVec4;
     }
