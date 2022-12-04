@@ -4,6 +4,7 @@
 function WebGLGeometryJSON(gl) {
 	this.gl = gl;
 	this.worldMatrix = new Matrix4();
+	this.alpha = 1;
 
 	// -----------------------------------------------------------------------------
 	this.create = function(jsonFileData, rawImage) {
@@ -105,6 +106,7 @@ function WebGLGeometryJSON(gl) {
         gl.uniformMatrix4fv(uniforms.worldMatrixUniform, false, this.worldMatrix.clone().transpose().elements);
         gl.uniformMatrix4fv(uniforms.viewMatrixUniform, false, camera.getViewMatrix().clone().transpose().elements);
         gl.uniformMatrix4fv(uniforms.projectionMatrixUniform, false, projectionMatrix.clone().transpose().elements);
+        gl.uniform1f(uniforms.alphaUniform, this.alpha);
 
         gl.drawElements(gl.TRIANGLES, this.indexCount, gl.UNSIGNED_SHORT, 0);
 

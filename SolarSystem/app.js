@@ -8,6 +8,7 @@ var camera = new OrbitCamera(appInput);
 
 var sun = null;
 var moon = null;
+var clouds = null;
 var planets = {
     mercury: null, venus: null,
     earth: null, mars: null,
@@ -104,7 +105,8 @@ var loadedAssets = {
     earthImage: null, marsImage: null,
     jupiterImage: null, saturnImage: null,
     uranusImage: null, neptuneImage: null,
-    skyImage: null, moonImage: null
+    skyImage: null, moonImage: null,
+    earthNightImage: null, earthCloudsImage: null
 };
 
 // -------------------------------------------------------------------------
@@ -123,11 +125,12 @@ function initGL(canvas) {
     var canvas = document.getElementById("webgl-canvas");
 
     try {
-        gl = canvas.getContext("webgl");
+        gl = canvas.getContext("webgl"), { alpha: false };
         gl.canvasWidth = canvas.width;
         gl.canvasHeight = canvas.height;
 
         gl.enable(gl.DEPTH_TEST);
+        gl.enable(gl.CULL_FACE);
     } catch (e) {}
 
     if (!gl) {
@@ -159,7 +162,10 @@ function loadAssets(onLoadedCB) {
         loadImage('./data/uranus.jpg'),
         loadImage('./data/neptune.jpg'),
         loadImage('./data/stars.jpeg'),
-        loadImage('./data/moon.png')
+        loadImage('./data/moon.png'),
+        loadImage('./data/earthNight.jpg'),
+        loadImage('./data/earthClouds.jpg'),
+
 
     ];
 
@@ -187,6 +193,8 @@ function loadAssets(onLoadedCB) {
         loadedAssets.neptuneImage = values[19];
         loadedAssets.skyImage = values[20];
         loadedAssets.moonImage = values[21];
+        loadedAssets.earthNightImage = values[22];
+        loadedAssets.earthCloudsImage = values[23];
 
     }).catch(function(error) {
         console.error(error.message);
@@ -214,6 +222,7 @@ function createShaders(loadedAssets) {
         lightPositionUniform: gl.getUniformLocation(phongShaderProgram, "uLightPosition"),
         cameraPositionUniform: gl.getUniformLocation(phongShaderProgram, "uCameraPosition"),
         textureUniform: gl.getUniformLocation(phongShaderProgram, "uTexture"),
+        alphaUniform: gl.getUniformLocation(phongShaderProgram, "uAlpha")
     };
 
     flatColorShaderProgram.attributes = {
@@ -281,6 +290,10 @@ function createScene() {
     moon = new WebGLGeometryJSON(gl, phongShaderProgram);
     moon.create(loadedAssets.sphereJSON, loadedAssets.moonImage);
 
+    clouds = new WebGLGeometryJSON(gl, phongShaderProgram);
+    clouds.create(loadedAssets.sphereJSON, loadedAssets.earthCloudsImage);
+    clouds.alpha = 0.15;
+
     cube.bottom = new WebGLGeometryQuad(gl, emissiveShaderProgram);
     cube.bottom.create(loadedAssets.skyImage);
     var scale = new Matrix4().makeScale(cubeScale, cubeScale, cubeScale);
@@ -292,7 +305,7 @@ function createScene() {
     cube.top = new WebGLGeometryQuad(gl, emissiveShaderProgram);
     cube.top.create(loadedAssets.skyImage);
     scale = new Matrix4().makeScale(cubeScale, cubeScale, cubeScale);
-    rotation = new Matrix4().makeRotationX(-90);
+    rotation = new Matrix4().makeRotationX(90);
     translation = new Matrix4().makeTranslation(0.0, cubeScale, 0.0, 0.0);
     cube.top.worldMatrix.makeIdentity();
     cube.top.worldMatrix.multiply(translation).multiply(rotation).multiply(scale);
@@ -308,7 +321,7 @@ function createScene() {
     cube.side2 = new WebGLGeometryQuad(gl, emissiveShaderProgram);
     cube.side2.create(loadedAssets.skyImage);
     scale = new Matrix4().makeScale(cubeScale, cubeScale, cubeScale);
-    rotation = new Matrix4().makeRotationX(0);
+    rotation = new Matrix4().makeRotationX(180);
     translation = new Matrix4().makeTranslation(0.0, 0.0, cubeScale, 0.0);
     cube.side2.worldMatrix.makeIdentity();
     cube.side2.worldMatrix.multiply(translation).multiply(rotation).multiply(scale);
@@ -324,7 +337,7 @@ function createScene() {
     cube.side4 = new WebGLGeometryQuad(gl, emissiveShaderProgram);
     cube.side4.create(loadedAssets.skyImage);
     scale = new Matrix4().makeScale(cubeScale, cubeScale, cubeScale);
-    rotation = new Matrix4().makeRotationY(90);
+    rotation = new Matrix4().makeRotationY(-90);
     translation = new Matrix4().makeTranslation(cubeScale, 0.0, 0.0, 0.0);
     cube.side4.worldMatrix.makeIdentity();
     cube.side4.worldMatrix.multiply(translation).multiply(rotation).multiply(scale);
@@ -339,7 +352,7 @@ function updateAndRender() {
     camera.update(time.deltaTime);
 
     gl.viewport(0, 0, gl.canvasWidth, gl.canvasHeight);
-    gl.clearColor(0.707, 0.707, 1, 1.0);
+    gl.clearColor(0, 0, 0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     gl.useProgram(phongShaderProgram);
@@ -360,6 +373,10 @@ function updateAndRender() {
     planets.earth.worldMatrix.makeIdentity();
     planets.earth.worldMatrix.multiply(orbit).multiply(translation).multiply(localSpin).multiply(scale);
 
+    scale.makeScale(scaleFactor * diameters.earth + 0.02, scaleFactor * diameters.earth + 0.02, scaleFactor * diameters.earth + 0.02);
+    clouds.worldMatrix.makeIdentity();
+    clouds.worldMatrix.multiply(orbit).multiply(translation).multiply(localSpin).multiply(scale);
+    
     orbit.makeRotationY(time.secondsElapsedSinceStart * timeFactor * orbitFactor.venus);
     localSpin.makeRotationY(-(time.secondsElapsedSinceStart * timeFactor * spinFactor.venus));
     translation.makeTranslation(distanceFactor * distances.venus, 0.0, 0.0);
@@ -424,7 +441,11 @@ function updateAndRender() {
     moon.worldMatrix.multiply(moonEarth).multiply(orbit).multiply(translation).multiply(scale);
 
     // -- render --
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
     sun.render(camera, projectionMatrix, emissiveShaderProgram);
+    moon.render(camera, projectionMatrix, phongShaderProgram);
 
     planets.mercury.render(camera, projectionMatrix, phongShaderProgram);
     planets.venus.render(camera, projectionMatrix, phongShaderProgram);
@@ -434,7 +455,8 @@ function updateAndRender() {
     planets.saturn.render(camera, projectionMatrix, phongShaderProgram);
     planets.uranus.render(camera, projectionMatrix, phongShaderProgram);
     planets.neptune.render(camera, projectionMatrix, phongShaderProgram);
-    moon.render(camera, projectionMatrix, phongShaderProgram)
+    
+    clouds.render(camera, projectionMatrix, phongShaderProgram);
 
     cube.bottom.render(camera, projectionMatrix, emissiveShaderProgram);
     cube.top.render(camera, projectionMatrix, emissiveShaderProgram);
@@ -442,6 +464,8 @@ function updateAndRender() {
     cube.side2.render(camera, projectionMatrix, emissiveShaderProgram);
     cube.side3.render(camera, projectionMatrix, emissiveShaderProgram);
     cube.side4.render(camera, projectionMatrix, emissiveShaderProgram);
+
+    gl.disable(gl.BLEND);
 
 }
 

@@ -3,6 +3,7 @@ precision mediump float;
 uniform vec3 uLightPosition;
 uniform vec3 uCameraPosition;
 uniform sampler2D uTexture;
+uniform float uAlpha;
 
 varying vec2 vTexcoords;
 varying vec3 vWorldNormal;
@@ -44,7 +45,8 @@ void main(void) {
     // add "diffuseColor" and "specularColor" when ready
     vec3 finalColor = ambient + diffuseColor + specularColor;
 
-    gl_FragColor = vec4(diffuseColor+ambient, 1.0);
+    gl_FragColor = vec4(diffuseColor+ambient, uAlpha);
+    //gl_FragColor.a = uAlpha;
     //gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
 }
 
