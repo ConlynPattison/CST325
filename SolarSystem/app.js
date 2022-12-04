@@ -27,7 +27,7 @@ var cube = {
 var cubeScale = 100.0;
 
 var projectionMatrix = new Matrix4();
-var lightPosition = new Vector3(4, 1.5, 0);
+var lightPosition = new Vector3(0, 0, 0);
 
 // the shader that will be used by each piece of geometry (they could each use their own shader but in this case it will be the same)
 var phongShaderProgram;
@@ -192,25 +192,6 @@ function createShaders(loadedAssets) {
 
 // -------------------------------------------------------------------------
 function createScene() {
-    groundGeometry = new WebGLGeometryQuad(gl, phongShaderProgram);
-    groundGeometry.create(loadedAssets.crackedMudImage);
-    var scale = new Matrix4().makeScale(10.0, 10.0, 10.0);
-    // compensate for the model being flipped on its side
-    var rotation = new Matrix4().makeRotationX(-90);
-    var translation = new Matrix4().makeTranslation(0.0, -5.0, 0.0)
-    groundGeometry.worldMatrix.makeIdentity();
-    groundGeometry.worldMatrix.multiply(translation).multiply(rotation).multiply(scale);
-
-    sphereLightGeometry = new WebGLGeometryJSON(gl, flatColorShaderProgram);
-    sphereLightGeometry.create(loadedAssets.sphereJSON)
-
-    // Scaled it down so that the diameter is 3
-    var scale = new Matrix4().makeScale(0.005, 0.005, 0.005);
-    // raise it by the radius to make it sit on the ground
-    var translation = new Matrix4().makeTranslation(lightPosition);
-
-    sphereLightGeometry.worldMatrix.makeIdentity();
-    sphereLightGeometry.worldMatrix.multiply(translation).multiply(scale);
 
     // ---------------------- FINAL PART --------------------------------
     sun = new WebGLGeometryJSON(gl, emissiveShaderProgram);
@@ -243,7 +224,7 @@ function createScene() {
     planets.mars = new WebGLGeometryJSON(gl, phongShaderProgram);
     planets.mars.create(loadedAssets.sphereJSON, loadedAssets.marsImage);
     scale = new Matrix4().makeScale(0.01, 0.01, 0.01);
-    var translation = new Matrix4().makeTranslation(20.0, 0.0, 0.0);
+    translation = new Matrix4().makeTranslation(20.0, 0.0, 0.0);
     planets.mars.worldMatrix.makeIdentity();
     planets.mars.worldMatrix.multiply(translation).multiply(scale);
 
@@ -264,7 +245,7 @@ function createScene() {
     planets.uranus = new WebGLGeometryJSON(gl, phongShaderProgram);
     planets.uranus.create(loadedAssets.sphereJSON, loadedAssets.uranusImage);
     scale = new Matrix4().makeScale(0.01, 0.01, 0.01);
-    var translation = new Matrix4().makeTranslation(35.0, 0.0, 0.0);
+    translation = new Matrix4().makeTranslation(35.0, 0.0, 0.0);
     planets.uranus.worldMatrix.makeIdentity();
     planets.uranus.worldMatrix.multiply(translation).multiply(scale);
 
@@ -330,17 +311,6 @@ function updateAndRender() {
 
     var aspectRatio = gl.canvasWidth / gl.canvasHeight;
 
-    var rotationMatrix = new Matrix4().makeRotationY(1);
-    var lightPositionRotated = rotationMatrix.multiplyVector(new Vector4(lightPosition.x, lightPosition.y, lightPosition.z, 1.0));
-
-    lightPosition.x = lightPositionRotated.x;
-    lightPosition.y = lightPositionRotated.y;
-    lightPosition.z = lightPositionRotated.z;
-
-    var scale = new Matrix4().makeScale(0.005, 0.005, 0.005);
-    sphereLightGeometry.worldMatrix.makeIdentity();
-    sphereLightGeometry.worldMatrix.multiply(new Matrix4().makeTranslation(lightPosition)).multiply(scale);
-
     time.update();
     camera.update(time.deltaTime);
 
@@ -358,8 +328,6 @@ function updateAndRender() {
     gl.uniform3f(uniforms.cameraPositionUniform, cameraPosition.x, cameraPosition.y, cameraPosition.z);
 
     projectionMatrix.makePerspective(45, aspectRatio, 0.1, 1000);
-    //groundGeometry.render(camera, projectionMatrix, phongShaderProgram);
-    sphereLightGeometry.render(camera, projectionMatrix, flatColorShaderProgram);
 
     // ---------------------- FINAL PART --------------------------------
     sun.render(camera, projectionMatrix, emissiveShaderProgram);
