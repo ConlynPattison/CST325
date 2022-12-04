@@ -21,7 +21,7 @@ var cube = {
 };
 var cubeScale = 2600.0;
 
-var timeFactor = 10.0;
+var timeFactor = 100.0;
 var scaleFactor = 0.005;  // shared among calculations
 var distanceFactor = 2.0;
 
@@ -55,22 +55,22 @@ var distances = { // distance, million miles (altered for ease of viewing)
 }
 
 var orbitFactor = { // 1 / Earth years req for planetary year
-    mercury: 1 / 0.241,
-    venus: 1 / 0.616,
-    earth: 1.0,
-    mars: 1 / 1.88,
-    jupiter: 1 / 12,
-    saturn: 1 / 30,
-    uranus: 1 / 84,
-    neptune: 1 / 165,
-    moon: 1 / 0.073
+    mercury: 1 / (88),
+    venus: 1 / (225),
+    earth: 1 / (365),
+    mars: 1 / (687),
+    jupiter: 1 / (12 * 365),
+    saturn: 1 / (30 * 365),
+    uranus: 1 / (84 * 365),
+    neptune: 1 / (165 * 365),
+    moon: 1 / (27)
 }
 
 var spinFactor = { // 1 / Earth days req for planetary day
     sun: 1 / 27,
     mercury: 1 / 58,
     venus: 1 / 116,
-    earth: 1.0,
+    earth: 1,
     mars: 1 / 1.026,
     jupiter: 1 / 0.4,
     saturn: 1 / 0.425,
@@ -403,7 +403,10 @@ function updateAndRender() {
     planets.neptune.worldMatrix.makeIdentity();
     planets.neptune.worldMatrix.multiply(orbit).multiply(translation).multiply(localSpin).multiply(scale);
 
-
+    localSpin.makeRotationY(time.secondsElapsedSinceStart * timeFactor * spinFactor.sun);
+    scale.makeScale(scaleFactor * diameters.sun, scaleFactor * diameters.sun, scaleFactor * diameters.sun);
+    sun.worldMatrix.makeIdentity();
+    sun.worldMatrix.multiply(localSpin).multiply(scale);
 
 
 
