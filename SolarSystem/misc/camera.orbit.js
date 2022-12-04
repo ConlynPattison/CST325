@@ -61,7 +61,7 @@ function OrbitCamera(input) {
         transformedTether = yaw.multiplyVector(transformedTether);
 
         var position = this.cameraTarget.clone().add(transformedTether);
-        this.lookAt(position, new Vector4(0, 0, 0, 1));
+        this.lookAt(position, this.cameraTarget);
     }
 
     // -------------------------------------------------------------------------

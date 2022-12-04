@@ -6,6 +6,9 @@ var appInput = new Input();
 var time = new Time();
 var camera = new OrbitCamera(appInput);
 
+var centerVec4 = new Vector4(0, 0, 0, 1);
+var followEarth = false;
+
 var sun = null;
 var moon = null;
 var clouds = null;
@@ -466,6 +469,19 @@ function updateAndRender() {
     cube.side4.render(camera, projectionMatrix, emissiveShaderProgram);
 
     gl.disable(gl.BLEND);
+
+    if (appInput.a && camera.cameraTarget == centerVec4) {
+        followEarth = true;
+    }
+    if (appInput.d && camera.cameraTarget != centerVec4) {
+        followEarth = false;
+        camera.cameraTarget = centerVec4;
+    }
+    if (followEarth) {
+        camera.cameraTarget = planets.earth.worldMatrix.multiplyVector(centerVec4);
+    }
+
+
 
 }
 
