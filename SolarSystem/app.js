@@ -7,11 +7,13 @@ var time = new Time();
 var camera = new OrbitCamera(appInput);
 
 var sun = null;
+var moon = null;
 var planets = {
     mercury: null, venus: null,
     earth: null, mars: null,
     jupiter: null, saturn: null,
-    uranus: null, neptune: null
+    uranus: null, neptune: null,
+    moon: null
 };
 
 var cube = {
@@ -21,8 +23,8 @@ var cube = {
 };
 var cubeScale = 2600.0;
 
-var timeFactor = 100.0;
-var scaleFactor = 0.005;  // shared among calculations
+var timeFactor = 500.0;
+var scaleFactor = 0.008;  // shared among calculations
 var distanceFactor = 2.0;
 
 var smallBias = 3.5;
@@ -51,7 +53,7 @@ var distances = { // distance, million miles (altered for ease of viewing)
     saturn: 889 * farBias,
     uranus: 1790 * tooFarBias,
     neptune: 2880 * tooFarBias,
-    moon: 0.2389
+    moon: 0.2389 * 50
 }
 
 var orbitFactor = { // 1 / Earth years req for planetary year
@@ -102,7 +104,7 @@ var loadedAssets = {
     earthImage: null, marsImage: null,
     jupiterImage: null, saturnImage: null,
     uranusImage: null, neptuneImage: null,
-    skyImage: null
+    skyImage: null, moonImage: null
 };
 
 // -------------------------------------------------------------------------
@@ -156,7 +158,8 @@ function loadAssets(onLoadedCB) {
         loadImage('./data/saturn.jpg'),
         loadImage('./data/uranus.jpg'),
         loadImage('./data/neptune.jpg'),
-        loadImage('./data/stars.jpeg')
+        loadImage('./data/stars.jpeg'),
+        loadImage('./data/moon.png')
 
     ];
 
@@ -183,6 +186,7 @@ function loadAssets(onLoadedCB) {
         loadedAssets.uranusImage = values[18];
         loadedAssets.neptuneImage = values[19];
         loadedAssets.skyImage = values[20];
+        loadedAssets.moonImage = values[21];
 
     }).catch(function(error) {
         console.error(error.message);
@@ -274,6 +278,9 @@ function createScene() {
     planets.neptune = new WebGLGeometryJSON(gl, phongShaderProgram);
     planets.neptune.create(loadedAssets.sphereJSON, loadedAssets.neptuneImage);
 
+    moon = new WebGLGeometryJSON(gl, phongShaderProgram);
+    moon.create(loadedAssets.sphereJSON, loadedAssets.moonImage);
+
     cube.bottom = new WebGLGeometryQuad(gl, emissiveShaderProgram);
     cube.bottom.create(loadedAssets.skyImage);
     var scale = new Matrix4().makeScale(cubeScale, cubeScale, cubeScale);
@@ -347,7 +354,7 @@ function updateAndRender() {
     // -- update --
     // orbit <- translate <- spin <- scale <- identity
     var orbit = new Matrix4().makeRotationY(time.secondsElapsedSinceStart * timeFactor * orbitFactor.earth);
-    var localSpin = new Matrix4().makeRotationY(time.secondsElapsedSinceStart * timeFactor);
+    var localSpin = new Matrix4().makeRotationY(time.secondsElapsedSinceStart * timeFactor * spinFactor.earth);
     var translation = new Matrix4().makeTranslation(distanceFactor * distances.earth, 0.0, 0.0);
     var scale = new Matrix4().makeScale(scaleFactor * diameters.earth, scaleFactor * diameters.earth, scaleFactor * diameters.earth);
     planets.earth.worldMatrix.makeIdentity();
@@ -408,8 +415,13 @@ function updateAndRender() {
     sun.worldMatrix.makeIdentity();
     sun.worldMatrix.multiply(localSpin).multiply(scale);
 
-
-
+    orbit.makeRotationY(time.secondsElapsedSinceStart * timeFactor * orbitFactor.moon);
+    //localSpin.makeRotationY(time.secondsElapsedSinceStart * timeFactor * spinFactor.moon);
+    scale.makeScale(scaleFactor * diameters.moon, scaleFactor * diameters.moon, scaleFactor * diameters.moon);
+    translation.makeTranslation(distanceFactor * distances.moon, 0.0, 0.0);
+    var moonEarth = new Matrix4().makeTranslation(planets.earth.worldMatrix.elements[3], planets.earth.worldMatrix.elements[7], planets.earth.worldMatrix.elements[11]);
+    moon.worldMatrix.makeIdentity();
+    moon.worldMatrix.multiply(moonEarth).multiply(orbit).multiply(translation).multiply(scale);
 
     // -- render --
     sun.render(camera, projectionMatrix, emissiveShaderProgram);
@@ -422,6 +434,7 @@ function updateAndRender() {
     planets.saturn.render(camera, projectionMatrix, phongShaderProgram);
     planets.uranus.render(camera, projectionMatrix, phongShaderProgram);
     planets.neptune.render(camera, projectionMatrix, phongShaderProgram);
+    moon.render(camera, projectionMatrix, phongShaderProgram)
 
     cube.bottom.render(camera, projectionMatrix, emissiveShaderProgram);
     cube.top.render(camera, projectionMatrix, emissiveShaderProgram);
