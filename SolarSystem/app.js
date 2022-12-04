@@ -12,6 +12,7 @@ var followEarth = false;
 var sun = null;
 var moon = null;
 var clouds = null;
+var rings = null;
 var planets = {
     mercury: null, venus: null,
     earth: null, mars: null,
@@ -33,7 +34,7 @@ var distanceFactor = 2.0;
 
 var smallBias = 3.5;
 var diameters = {  // diameter, thousand miles (altered beyond reality for ease of viewing)
-    sun: 100.0,
+    sun: 120.0,
     mercury: 3.0 * smallBias,
     venus: 7.5 * smallBias,
     earth: 7.9 * smallBias,
@@ -60,7 +61,7 @@ var distances = { // distance, million miles (altered for ease of viewing)
     moon: 0.2389 * 50
 }
 
-var orbitFactor = { // 1 / Earth years req for planetary year
+var orbitFactor = { //     1 / Earth years req for planetary year
     mercury: 1 / (88),
     venus: 1 / (225),
     earth: 1 / (365),
@@ -72,7 +73,7 @@ var orbitFactor = { // 1 / Earth years req for planetary year
     moon: 1 / (27)
 }
 
-var spinFactor = { // 1 / Earth days req for planetary day
+var spinFactor = { //    1 / Earth days req for planetary day
     sun: 1 / 27,
     mercury: 1 / 58,
     venus: 1 / 116,
@@ -297,6 +298,9 @@ function createScene() {
     clouds.create(loadedAssets.sphereJSON, loadedAssets.earthCloudsImage);
     clouds.alpha = 0.15;
 
+    rings = new WebGLGeometryJSON(gl, phongShaderProgram);
+    rings.create(loadedAssets.sphereJSON, loadedAssets.saturnImage);
+
     cube.bottom = new WebGLGeometryQuad(gl, emissiveShaderProgram);
     cube.bottom.create(loadedAssets.skyImage);
     var scale = new Matrix4().makeScale(cubeScale, cubeScale, cubeScale);
@@ -376,7 +380,7 @@ function updateAndRender() {
     planets.earth.worldMatrix.makeIdentity();
     planets.earth.worldMatrix.multiply(orbit).multiply(translation).multiply(localSpin).multiply(scale);
 
-    scale.makeScale(scaleFactor * diameters.earth + 0.02, scaleFactor * diameters.earth + 0.02, scaleFactor * diameters.earth + 0.02);
+    scale.makeScale(scaleFactor * diameters.earth + 0.02, scaleFactor * diameters.earth + 0.01, scaleFactor * diameters.earth + 0.02);
     clouds.worldMatrix.makeIdentity();
     clouds.worldMatrix.multiply(orbit).multiply(translation).multiply(localSpin).multiply(scale);
     
@@ -415,6 +419,11 @@ function updateAndRender() {
     planets.saturn.worldMatrix.makeIdentity();
     planets.saturn.worldMatrix.multiply(orbit).multiply(translation).multiply(localSpin).multiply(scale);
 
+    scale.makeScale(scaleFactor * diameters.saturn * 2.5, scaleFactor, scaleFactor * diameters.saturn * 2.5);
+    translation.makeTranslation(planets.saturn.worldMatrix.elements[3], planets.saturn.worldMatrix.elements[7], planets.saturn.worldMatrix.elements[11]);
+    rings.worldMatrix.makeIdentity();
+    rings.worldMatrix.multiply(translation).multiply(scale).multiply(localSpin);
+
     orbit.makeRotationY(time.secondsElapsedSinceStart * timeFactor * orbitFactor.uranus);
     var uranusRotation = new Matrix4().makeRotationZ(90);
     localSpin.makeRotationX(-(time.secondsElapsedSinceStart * timeFactor * spinFactor.uranus));
@@ -436,7 +445,6 @@ function updateAndRender() {
     sun.worldMatrix.multiply(localSpin).multiply(scale);
 
     orbit.makeRotationY(time.secondsElapsedSinceStart * timeFactor * orbitFactor.moon);
-    //localSpin.makeRotationY(time.secondsElapsedSinceStart * timeFactor * spinFactor.moon);
     scale.makeScale(scaleFactor * diameters.moon, scaleFactor * diameters.moon, scaleFactor * diameters.moon);
     translation.makeTranslation(distanceFactor * distances.moon, 0.0, 0.0);
     var moonEarth = new Matrix4().makeTranslation(planets.earth.worldMatrix.elements[3], planets.earth.worldMatrix.elements[7], planets.earth.worldMatrix.elements[11]);
@@ -460,6 +468,7 @@ function updateAndRender() {
     planets.neptune.render(camera, projectionMatrix, phongShaderProgram);
     
     clouds.render(camera, projectionMatrix, phongShaderProgram);
+    rings.render(camera, projectionMatrix, phongShaderProgram);
 
     cube.bottom.render(camera, projectionMatrix, emissiveShaderProgram);
     cube.top.render(camera, projectionMatrix, emissiveShaderProgram);
