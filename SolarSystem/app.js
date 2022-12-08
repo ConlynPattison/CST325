@@ -257,6 +257,8 @@ function createShaders(loadedAssets) {
         lightPositionUniform: gl.getUniformLocation(emissiveShaderProgram, "uLightPosition"),
         cameraPositionUniform: gl.getUniformLocation(emissiveShaderProgram, "uCameraPosition"),
         textureUniform: gl.getUniformLocation(emissiveShaderProgram, "uTexture"),
+        timeUniform: gl.getUniformLocation(emissiveShaderProgram, "uTime")
+
     };
 }
 
@@ -367,6 +369,10 @@ function updateAndRender() {
     var cameraPosition = camera.getPosition();
     gl.uniform3f(uniforms.lightPositionUniform, lightPosition.x, lightPosition.y, lightPosition.z);
     gl.uniform3f(uniforms.cameraPositionUniform, cameraPosition.x, cameraPosition.y, cameraPosition.z);
+
+    gl.useProgram(emissiveShaderProgram);
+    uniforms = emissiveShaderProgram.uniforms;
+    gl.uniform1f(uniforms.timeUniform, time.secondsElapsedSinceStart);
 
     projectionMatrix.makePerspective(45, aspectRatio, 0.1, 3 * cubeScale);
 
