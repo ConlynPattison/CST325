@@ -155,10 +155,6 @@ function loadAssets(onLoadedCB) {
         fetch('./shaders/emissive.vs.glsl').then((response) => { return response.text(); }),
         fetch('./shaders/emissive.fs.glsl').then((response) => { return response.text(); }),
         fetch('./data/sphere.json').then((response) => { return response.json(); }),
-        fetch('./data/barrel.json').then((response) => { return response.json(); }),
-        loadImage('./data/marble.jpg'),
-        loadImage('./data/barrel.png'),
-        loadImage('./data/crackedMud.png'),
         loadImage('./data/sun.jpg'),
         loadImage('./data/mercury.jpg'),
         loadImage('./data/venus.jpg'),
@@ -187,25 +183,21 @@ function loadAssets(onLoadedCB) {
         loadedAssets.emissiveVS = values[4];
         loadedAssets.emissiveFS = values[5];
         loadedAssets.sphereJSON = values[6];
-        loadedAssets.barrelJSON = values[7];
-        loadedAssets.marbleImage = values[8];
-        loadedAssets.barrelImage = values[9];
-        loadedAssets.crackedMudImage = values[10];
-        loadedAssets.sunImage = values[11];
-        loadedAssets.mercuryImage = values[12];
-        loadedAssets.venusImage = values[13];
-        loadedAssets.earthImage = values[14];
-        loadedAssets.marsImage = values[15];
-        loadedAssets.jupiterImage = values[16];
-        loadedAssets.saturnImage = values[17];
-        loadedAssets.uranusImage = values[18];
-        loadedAssets.neptuneImage = values[19];
-        loadedAssets.skyImage = values[20];
-        loadedAssets.moonImage = values[21];
-        loadedAssets.earthNightImage = values[22];
-        loadedAssets.earthCloudsImage = values[23];
-        loadedAssets.earthTextVS = values[24];
-        loadedAssets.earthTextFS = values[25];
+        loadedAssets.sunImage = values[7];
+        loadedAssets.mercuryImage = values[8];
+        loadedAssets.venusImage = values[9];
+        loadedAssets.earthImage = values[10];
+        loadedAssets.marsImage = values[11];
+        loadedAssets.jupiterImage = values[12];
+        loadedAssets.saturnImage = values[13];
+        loadedAssets.uranusImage = values[14];
+        loadedAssets.neptuneImage = values[15];
+        loadedAssets.skyImage = values[16];
+        loadedAssets.moonImage = values[17];
+        loadedAssets.earthNightImage = values[18];
+        loadedAssets.earthCloudsImage = values[19];
+        loadedAssets.earthTextVS = values[20];
+        loadedAssets.earthTextFS = values[21];
 
 
     }).catch(function(error) {
