@@ -15,18 +15,20 @@ void main(void) {
     vec3 normalizedWorldNormal = normalize(vWorldNormal);
     float lambertTerm = dot(normalizedLightDirection, normalizedWorldNormal);
 
-    vec3 materialLight = texture2D(uTextureDay, vTexcoords).rgb;
-    vec3 diffuseDay = max(materialLight * lambertTerm, 0.0);
+    vec3 albedoDay = texture2D(uTextureDay, vTexcoords).rgb;
+    vec3 diffuseDay = max(albedoDay * lambertTerm, 0.0);
 
+    vec3 negativeNormLightDir = -normalizedLightDirection;
+    float lambertNight = dot(negativeNormLightDir, normalizedWorldNormal);
 
     vec3 albedoNight = texture2D(uTextureNight, vTexcoords).rgb;
-    vec3 ambientNight = albedoNight * 1.0;
-
+    vec3 diffuseNight = max(albedoNight * lambertNight, 0.0);
+    
 
     if (lambertTerm > 0.0) {
         gl_FragColor = vec4(diffuseDay, uAlpha);
     } else {
-        gl_FragColor = vec4(ambientNight, uAlpha);
+        gl_FragColor = vec4(diffuseNight, uAlpha);
     }
 }
 

@@ -1,3 +1,4 @@
+// Conlyn Pattison
 'use strict'
 
 var gl;
@@ -28,7 +29,7 @@ var cube = {
 };
 var cubeScale = 2600.0;
 
-var timeFactor = 100.0;
+var timeFactor = 500.0;
 var scaleFactor = 0.008;  // shared among calculations
 var distanceFactor = 2.0;
 
