@@ -10,6 +10,10 @@ var camera = new OrbitCamera(appInput);
 var centerVec4 = new Vector4(0, 0, 0, 1);
 var followEarth = false;
 
+const TIME_FACTOR = 500.0;   // Affects the spinning and orbiting speed of objects
+const SCALE_FACTOR = 0.008;  // Affects object size (planets, atmospheres, moons, sun)
+const DISTANCE_FACTOR = 2.0; // Affects relative object distances from sun (planets, atmospheres, moons, sun)
+
 var sun = null;
 var moon = null;
 var clouds = null;
@@ -22,47 +26,43 @@ var planets = {
     moon: null
 };
 
+const CUBE_SCALE = 2600.0;
 var cube = {
     top: null, side1: null,
     side2: null, side3: null,
     side4: null, bottom: null
 };
-var cubeScale = 2600.0;
 
-var timeFactor = 500.0;
-var scaleFactor = 0.008;  // shared among calculations
-var distanceFactor = 2.0;
-
-var smallBias = 3.5;
-var diameters = {  // diameter, thousand miles (altered beyond reality for ease of viewing)
+const SMALL_BIAS = 3.5;
+const DIAMETERS = {  // diameter, thousand miles (altered beyond reality for ease of viewing)
     sun: 120.0,
-    mercury: 3.0 * smallBias,
-    venus: 7.5 * smallBias,
-    earth: 7.9 * smallBias,
-    mars: 4.2 * smallBias,
+    mercury: 3.0 * SMALL_BIAS,
+    venus: 7.5 * SMALL_BIAS,
+    earth: 7.9 * SMALL_BIAS,
+    mars: 4.2 * SMALL_BIAS,
     jupiter: 88.7,
     saturn: 74.6,
     uranus: 32.6,
     neptune: 30.2,
-    moon: 2.1 * smallBias
+    moon: 2.1 * SMALL_BIAS
 };
 
-var farBias = 0.6;
-var tooFarBias = 0.4;
-var nearBias = 1.5;
-var distances = { // distance, million miles (altered for ease of viewing)
-    mercury: 35 * nearBias,
-    venus: 67 * nearBias,
-    earth: 93 * nearBias,
-    mars: 142 * nearBias,
-    jupiter: 484 * farBias,
-    saturn: 889 * farBias,
-    uranus: 1790 * tooFarBias,
-    neptune: 2880 * tooFarBias,
+const FAR_BIAS = 0.6;
+const TOO_FAR_BIAS = 0.4;
+const NEAR_BIAS = 1.5;
+const DISTANCES = { // distance, million miles (altered for ease of viewing)
+    mercury: 35 * NEAR_BIAS,
+    venus: 67 * NEAR_BIAS,
+    earth: 93 * NEAR_BIAS,
+    mars: 142 * NEAR_BIAS,
+    jupiter: 484 * FAR_BIAS,
+    saturn: 889 * FAR_BIAS,
+    uranus: 1790 * TOO_FAR_BIAS,
+    neptune: 2880 * TOO_FAR_BIAS,
     moon: 0.2389 * 50
 }
 
-var orbitFactor = { //     1 / Earth years req for planetary year
+const ORBIT_FACTOR = { //     1 / Earth years req for planetary year
     mercury: 1 / (88),
     venus: 1 / (225),
     earth: 1 / (365),
@@ -74,7 +74,7 @@ var orbitFactor = { //     1 / Earth years req for planetary year
     moon: 1 / (27)
 }
 
-var spinFactor = { //    1 / Earth days req for planetary day
+const SPIN_FACTOR = { //    1 / Earth days req for planetary day
     sun: 1 / 27,
     mercury: 1 / 58,
     venus: 1 / 116,
@@ -330,49 +330,49 @@ function createScene() {
 
     cube.bottom = new WebGLGeometryQuad(gl, emissiveShaderProgram);
     cube.bottom.create(loadedAssets.skyImage);
-    var scale = new Matrix4().makeScale(cubeScale, cubeScale, cubeScale);
+    var scale = new Matrix4().makeScale(CUBE_SCALE, CUBE_SCALE, CUBE_SCALE);
     var rotation = new Matrix4().makeRotationX(-90);
-    var translation = new Matrix4().makeTranslation(0.0, -cubeScale, 0.0, 0.0);
+    var translation = new Matrix4().makeTranslation(0.0, -CUBE_SCALE, 0.0, 0.0);
     cube.bottom.worldMatrix.makeIdentity();
     cube.bottom.worldMatrix.multiply(translation).multiply(rotation).multiply(scale);
 
     cube.top = new WebGLGeometryQuad(gl, emissiveShaderProgram);
     cube.top.create(loadedAssets.skyImage);
-    scale = new Matrix4().makeScale(cubeScale, cubeScale, cubeScale);
+    scale = new Matrix4().makeScale(CUBE_SCALE, CUBE_SCALE, CUBE_SCALE);
     rotation = new Matrix4().makeRotationX(90);
-    translation = new Matrix4().makeTranslation(0.0, cubeScale, 0.0, 0.0);
+    translation = new Matrix4().makeTranslation(0.0, CUBE_SCALE, 0.0, 0.0);
     cube.top.worldMatrix.makeIdentity();
     cube.top.worldMatrix.multiply(translation).multiply(rotation).multiply(scale);
 
     cube.side1 = new WebGLGeometryQuad(gl, emissiveShaderProgram);
     cube.side1.create(loadedAssets.skyImage);
-    scale = new Matrix4().makeScale(cubeScale, cubeScale, cubeScale);
+    scale = new Matrix4().makeScale(CUBE_SCALE, CUBE_SCALE, CUBE_SCALE);
     rotation = new Matrix4().makeRotationX(0);
-    translation = new Matrix4().makeTranslation(0.0, 0.0, -cubeScale, 0.0);
+    translation = new Matrix4().makeTranslation(0.0, 0.0, -CUBE_SCALE, 0.0);
     cube.side1.worldMatrix.makeIdentity();
     cube.side1.worldMatrix.multiply(translation).multiply(rotation).multiply(scale);
 
     cube.side2 = new WebGLGeometryQuad(gl, emissiveShaderProgram);
     cube.side2.create(loadedAssets.skyImage);
-    scale = new Matrix4().makeScale(cubeScale, cubeScale, cubeScale);
+    scale = new Matrix4().makeScale(CUBE_SCALE, CUBE_SCALE, CUBE_SCALE);
     rotation = new Matrix4().makeRotationX(180);
-    translation = new Matrix4().makeTranslation(0.0, 0.0, cubeScale, 0.0);
+    translation = new Matrix4().makeTranslation(0.0, 0.0, CUBE_SCALE, 0.0);
     cube.side2.worldMatrix.makeIdentity();
     cube.side2.worldMatrix.multiply(translation).multiply(rotation).multiply(scale);
 
     cube.side3 = new WebGLGeometryQuad(gl, emissiveShaderProgram);
     cube.side3.create(loadedAssets.skyImage);
-    scale = new Matrix4().makeScale(cubeScale, cubeScale, cubeScale);
+    scale = new Matrix4().makeScale(CUBE_SCALE, CUBE_SCALE, CUBE_SCALE);
     rotation = new Matrix4().makeRotationY(90);
-    translation = new Matrix4().makeTranslation(-cubeScale, 0.0, 0.0, 0.0);
+    translation = new Matrix4().makeTranslation(-CUBE_SCALE, 0.0, 0.0, 0.0);
     cube.side3.worldMatrix.makeIdentity();
     cube.side3.worldMatrix.multiply(translation).multiply(rotation).multiply(scale);
 
     cube.side4 = new WebGLGeometryQuad(gl, emissiveShaderProgram);
     cube.side4.create(loadedAssets.skyImage);
-    scale = new Matrix4().makeScale(cubeScale, cubeScale, cubeScale);
+    scale = new Matrix4().makeScale(CUBE_SCALE, CUBE_SCALE, CUBE_SCALE);
     rotation = new Matrix4().makeRotationY(-90);
-    translation = new Matrix4().makeTranslation(cubeScale, 0.0, 0.0, 0.0);
+    translation = new Matrix4().makeTranslation(CUBE_SCALE, 0.0, 0.0, 0.0);
     cube.side4.worldMatrix.makeIdentity();
     cube.side4.worldMatrix.multiply(translation).multiply(rotation).multiply(scale);
 }
@@ -399,85 +399,85 @@ function updateAndRender() {
     uniforms = emissiveShaderProgram.uniforms;
     gl.uniform1f(uniforms.timeUniform, time.secondsElapsedSinceStart);
 
-    projectionMatrix.makePerspective(45, aspectRatio, 0.1, 3 * cubeScale);
+    projectionMatrix.makePerspective(45, aspectRatio, 0.1, 3 * CUBE_SCALE);
 
     // ---------------------- FINAL PART --------------------------------
     // -- update --
     // orbit <- translate <- spin <- scale <- identity
-    var orbit = new Matrix4().makeRotationY(time.secondsElapsedSinceStart * timeFactor * orbitFactor.earth);
-    var localSpin = new Matrix4().makeRotationY(time.secondsElapsedSinceStart * timeFactor * spinFactor.earth);
-    var translation = new Matrix4().makeTranslation(distanceFactor * distances.earth, 0.0, 0.0);
-    var scale = new Matrix4().makeScale(scaleFactor * diameters.earth, scaleFactor * diameters.earth, scaleFactor * diameters.earth);
+    var orbit = new Matrix4().makeRotationY(time.secondsElapsedSinceStart * TIME_FACTOR * ORBIT_FACTOR.earth);
+    var localSpin = new Matrix4().makeRotationY(time.secondsElapsedSinceStart * TIME_FACTOR * SPIN_FACTOR.earth);
+    var translation = new Matrix4().makeTranslation(DISTANCE_FACTOR * DISTANCES.earth, 0.0, 0.0);
+    var scale = new Matrix4().makeScale(SCALE_FACTOR * DIAMETERS.earth, SCALE_FACTOR * DIAMETERS.earth, SCALE_FACTOR * DIAMETERS.earth);
     planets.earth.worldMatrix.makeIdentity();
     planets.earth.worldMatrix.multiply(orbit).multiply(translation).multiply(localSpin).multiply(scale);
 
-    scale.makeScale(scaleFactor * diameters.earth + 0.015, scaleFactor * diameters.earth + 0.015, scaleFactor * diameters.earth + 0.015);
+    scale.makeScale(SCALE_FACTOR * DIAMETERS.earth + 0.015, SCALE_FACTOR * DIAMETERS.earth + 0.015, SCALE_FACTOR * DIAMETERS.earth + 0.015);
     clouds.worldMatrix.makeIdentity();
     clouds.worldMatrix.multiply(orbit).multiply(translation).multiply(localSpin).multiply(scale);
     
-    orbit.makeRotationY(time.secondsElapsedSinceStart * timeFactor * orbitFactor.venus);
-    localSpin.makeRotationY(-(time.secondsElapsedSinceStart * timeFactor * spinFactor.venus));
-    translation.makeTranslation(distanceFactor * distances.venus, 0.0, 0.0);
-    scale.makeScale(scaleFactor * diameters.venus, scaleFactor * diameters.venus, scaleFactor * diameters.venus);
+    orbit.makeRotationY(time.secondsElapsedSinceStart * TIME_FACTOR * ORBIT_FACTOR.venus);
+    localSpin.makeRotationY(-(time.secondsElapsedSinceStart * TIME_FACTOR * SPIN_FACTOR.venus));
+    translation.makeTranslation(DISTANCE_FACTOR * DISTANCES.venus, 0.0, 0.0);
+    scale.makeScale(SCALE_FACTOR * DIAMETERS.venus, SCALE_FACTOR * DIAMETERS.venus, SCALE_FACTOR * DIAMETERS.venus);
     planets.venus.worldMatrix.makeIdentity();
     planets.venus.worldMatrix.multiply(orbit).multiply(translation).multiply(localSpin).multiply(scale);
 
-    orbit.makeRotationY(time.secondsElapsedSinceStart * timeFactor * orbitFactor.mercury);
-    localSpin.makeRotationY(time.secondsElapsedSinceStart * timeFactor * spinFactor.mercury);
-    translation.makeTranslation(distanceFactor * distances.mercury, 0.0, 0.0);
-    scale.makeScale(scaleFactor * diameters.mercury, scaleFactor * diameters.mercury, scaleFactor * diameters.mercury);
+    orbit.makeRotationY(time.secondsElapsedSinceStart * TIME_FACTOR * ORBIT_FACTOR.mercury);
+    localSpin.makeRotationY(time.secondsElapsedSinceStart * TIME_FACTOR * SPIN_FACTOR.mercury);
+    translation.makeTranslation(DISTANCE_FACTOR * DISTANCES.mercury, 0.0, 0.0);
+    scale.makeScale(SCALE_FACTOR * DIAMETERS.mercury, SCALE_FACTOR * DIAMETERS.mercury, SCALE_FACTOR * DIAMETERS.mercury);
     planets.mercury.worldMatrix.makeIdentity();
     planets.mercury.worldMatrix.multiply(orbit).multiply(translation).multiply(localSpin).multiply(scale);
 
-    orbit.makeRotationY(time.secondsElapsedSinceStart * timeFactor * orbitFactor.mars);
-    localSpin.makeRotationY(time.secondsElapsedSinceStart * timeFactor * spinFactor.mars);
-    translation.makeTranslation(distanceFactor * distances.mars, 0.0, 0.0);
-    scale.makeScale(scaleFactor * diameters.mars, scaleFactor * diameters.mars, scaleFactor * diameters.mars);
+    orbit.makeRotationY(time.secondsElapsedSinceStart * TIME_FACTOR * ORBIT_FACTOR.mars);
+    localSpin.makeRotationY(time.secondsElapsedSinceStart * TIME_FACTOR * SPIN_FACTOR.mars);
+    translation.makeTranslation(DISTANCE_FACTOR * DISTANCES.mars, 0.0, 0.0);
+    scale.makeScale(SCALE_FACTOR * DIAMETERS.mars, SCALE_FACTOR * DIAMETERS.mars, SCALE_FACTOR * DIAMETERS.mars);
     planets.mars.worldMatrix.makeIdentity();
     planets.mars.worldMatrix.multiply(orbit).multiply(translation).multiply(localSpin).multiply(scale);
 
-    orbit.makeRotationY(time.secondsElapsedSinceStart * timeFactor * orbitFactor.jupiter);
-    localSpin.makeRotationY(time.secondsElapsedSinceStart * timeFactor * spinFactor.jupiter);
-    translation.makeTranslation(distanceFactor * distances.jupiter, 0.0, 0.0);
-    scale.makeScale(scaleFactor * diameters.jupiter, scaleFactor * diameters.jupiter, scaleFactor * diameters.jupiter);
+    orbit.makeRotationY(time.secondsElapsedSinceStart * TIME_FACTOR * ORBIT_FACTOR.jupiter);
+    localSpin.makeRotationY(time.secondsElapsedSinceStart * TIME_FACTOR * SPIN_FACTOR.jupiter);
+    translation.makeTranslation(DISTANCE_FACTOR * DISTANCES.jupiter, 0.0, 0.0);
+    scale.makeScale(SCALE_FACTOR * DIAMETERS.jupiter, SCALE_FACTOR * DIAMETERS.jupiter, SCALE_FACTOR * DIAMETERS.jupiter);
     planets.jupiter.worldMatrix.makeIdentity();
     planets.jupiter.worldMatrix.multiply(orbit).multiply(translation).multiply(localSpin).multiply(scale);
 
-    orbit.makeRotationY(time.secondsElapsedSinceStart * timeFactor * orbitFactor.saturn);
-    localSpin.makeRotationY(time.secondsElapsedSinceStart * timeFactor * spinFactor.saturn);
-    translation.makeTranslation(distanceFactor * distances.saturn, 0.0, 0.0);
-    scale.makeScale(scaleFactor * diameters.saturn, scaleFactor * diameters.saturn, scaleFactor * diameters.saturn);
+    orbit.makeRotationY(time.secondsElapsedSinceStart * TIME_FACTOR * ORBIT_FACTOR.saturn);
+    localSpin.makeRotationY(time.secondsElapsedSinceStart * TIME_FACTOR * SPIN_FACTOR.saturn);
+    translation.makeTranslation(DISTANCE_FACTOR * DISTANCES.saturn, 0.0, 0.0);
+    scale.makeScale(SCALE_FACTOR * DIAMETERS.saturn, SCALE_FACTOR * DIAMETERS.saturn, SCALE_FACTOR * DIAMETERS.saturn);
     planets.saturn.worldMatrix.makeIdentity();
     planets.saturn.worldMatrix.multiply(orbit).multiply(translation).multiply(localSpin).multiply(scale);
 
-    scale.makeScale(scaleFactor * diameters.saturn * 2.5, scaleFactor, scaleFactor * diameters.saturn * 2.5);
+    scale.makeScale(SCALE_FACTOR * DIAMETERS.saturn * 2.5, SCALE_FACTOR, SCALE_FACTOR * DIAMETERS.saturn * 2.5);
     translation.makeTranslation(planets.saturn.worldMatrix.elements[3], planets.saturn.worldMatrix.elements[7], planets.saturn.worldMatrix.elements[11]);
     rings.worldMatrix.makeIdentity();
     rings.worldMatrix.multiply(translation).multiply(scale).multiply(localSpin);
 
-    orbit.makeRotationY(time.secondsElapsedSinceStart * timeFactor * orbitFactor.uranus);
+    orbit.makeRotationY(time.secondsElapsedSinceStart * TIME_FACTOR * ORBIT_FACTOR.uranus);
     var uranusRotation = new Matrix4().makeRotationZ(90);
-    localSpin.makeRotationX(-(time.secondsElapsedSinceStart * timeFactor * spinFactor.uranus));
-    translation.makeTranslation(distanceFactor * distances.uranus, 0.0, 0.0);
-    scale.makeScale(scaleFactor * diameters.uranus, scaleFactor * diameters.uranus, scaleFactor * diameters.uranus);
+    localSpin.makeRotationX(-(time.secondsElapsedSinceStart * TIME_FACTOR * SPIN_FACTOR.uranus));
+    translation.makeTranslation(DISTANCE_FACTOR * DISTANCES.uranus, 0.0, 0.0);
+    scale.makeScale(SCALE_FACTOR * DIAMETERS.uranus, SCALE_FACTOR * DIAMETERS.uranus, SCALE_FACTOR * DIAMETERS.uranus);
     planets.uranus.worldMatrix.makeIdentity();
     planets.uranus.worldMatrix.multiply(orbit).multiply(translation).multiply(localSpin).multiply(uranusRotation).multiply(scale);
 
-    orbit.makeRotationY(time.secondsElapsedSinceStart * timeFactor * orbitFactor.neptune);
-    localSpin.makeRotationY(time.secondsElapsedSinceStart * timeFactor * spinFactor.neptune);
-    translation.makeTranslation(distanceFactor * distances.neptune, 0.0, 0.0);
-    scale.makeScale(scaleFactor * diameters.neptune, scaleFactor * diameters.neptune, scaleFactor * diameters.neptune);
+    orbit.makeRotationY(time.secondsElapsedSinceStart * TIME_FACTOR * ORBIT_FACTOR.neptune);
+    localSpin.makeRotationY(time.secondsElapsedSinceStart * TIME_FACTOR * SPIN_FACTOR.neptune);
+    translation.makeTranslation(DISTANCE_FACTOR * DISTANCES.neptune, 0.0, 0.0);
+    scale.makeScale(SCALE_FACTOR * DIAMETERS.neptune, SCALE_FACTOR * DIAMETERS.neptune, SCALE_FACTOR * DIAMETERS.neptune);
     planets.neptune.worldMatrix.makeIdentity();
     planets.neptune.worldMatrix.multiply(orbit).multiply(translation).multiply(localSpin).multiply(scale);
 
-    localSpin.makeRotationY(time.secondsElapsedSinceStart * timeFactor * spinFactor.sun);
-    scale.makeScale(scaleFactor * diameters.sun, scaleFactor * diameters.sun, scaleFactor * diameters.sun);
+    localSpin.makeRotationY(time.secondsElapsedSinceStart * TIME_FACTOR * SPIN_FACTOR.sun);
+    scale.makeScale(SCALE_FACTOR * DIAMETERS.sun, SCALE_FACTOR * DIAMETERS.sun, SCALE_FACTOR * DIAMETERS.sun);
     sun.worldMatrix.makeIdentity();
     sun.worldMatrix.multiply(localSpin).multiply(scale);
 
-    orbit.makeRotationY(time.secondsElapsedSinceStart * timeFactor * orbitFactor.moon);
-    scale.makeScale(scaleFactor * diameters.moon, scaleFactor * diameters.moon, scaleFactor * diameters.moon);
-    translation.makeTranslation(distanceFactor * distances.moon, 0.0, 0.0);
+    orbit.makeRotationY(time.secondsElapsedSinceStart * TIME_FACTOR * ORBIT_FACTOR.moon);
+    scale.makeScale(SCALE_FACTOR * DIAMETERS.moon, SCALE_FACTOR * DIAMETERS.moon, SCALE_FACTOR * DIAMETERS.moon);
+    translation.makeTranslation(DISTANCE_FACTOR * DISTANCES.moon, 0.0, 0.0);
     var moonEarth = new Matrix4().makeTranslation(planets.earth.worldMatrix.elements[3], planets.earth.worldMatrix.elements[7], planets.earth.worldMatrix.elements[11]);
     moon.worldMatrix.makeIdentity();
     moon.worldMatrix.multiply(moonEarth).multiply(orbit).multiply(translation).multiply(scale);
