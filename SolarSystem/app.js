@@ -28,7 +28,7 @@ var cube = {
 };
 var cubeScale = 2600.0;
 
-var timeFactor = 500.0;
+var timeFactor = 0.0;
 var scaleFactor = 0.008;  // shared among calculations
 var distanceFactor = 2.0;
 

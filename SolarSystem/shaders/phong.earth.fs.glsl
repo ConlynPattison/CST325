@@ -15,23 +15,19 @@ void main(void) {
     vec3 normalizedWorldNormal = normalize(vWorldNormal);
     float lambertTerm = dot(normalizedLightDirection, normalizedWorldNormal);
 
-    vec3 surfaceToEye = normalize(uCameraPosition - vWorldPosition);
-    vec3 normalizedReflectionVector = normalize(-normalizedLightDirection) + 2.0*(dot(normalizedLightDirection, normalizedWorldNormal))*normalizedWorldNormal;
-    float phongTerm = pow(max(dot(normalizedReflectionVector, surfaceToEye), 0.0), 64.0);
-    vec3 materialLightPhong = vec3(0.3, 0.3, 0.3) * phongTerm;
-
     vec3 materialLight = texture2D(uTextureDay, vTexcoords).rgb;
-    materialLight = max(materialLight * lambertTerm, 0.0);
+    vec3 diffuseDay = max(materialLight * lambertTerm, 0.0);
 
 
-    vec3 albedo = texture2D(uTextureNight, vTexcoords).rgb;
-    vec3 ambient = albedo * 0.5;
-    vec3 diffuseColor = materialLight;
-    vec3 specularColor = materialLightPhong;
+    vec3 albedoNight = texture2D(uTextureNight, vTexcoords).rgb;
+    vec3 ambientNight = albedoNight * 1.0;
 
-    vec3 finalColor = ambient + diffuseColor + specularColor;
 
-    gl_FragColor = vec4(ambient, uAlpha);
+    if (lambertTerm > 0.0) {
+        gl_FragColor = vec4(diffuseDay, uAlpha);
+    } else {
+        gl_FragColor = vec4(ambientNight, uAlpha);
+    }
 }
 
 // EOF 00100001-10

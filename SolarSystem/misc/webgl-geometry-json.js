@@ -113,14 +113,21 @@ function WebGLGeometryJSON(gl) {
 
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
 
-        if (this.texture0) {
+        if (this.texture0 && !this.texture1) {
             gl.activeTexture(gl.TEXTURE0);
             gl.bindTexture(gl.TEXTURE_2D, this.texture0);
+            gl.uniform1i(gl.getUniformLocation(shaderProgram, "uTexture"), 0);
         }
 
-        if (this.texture1) {
+        else if (this.texture1) {
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, this.texture0);
             gl.activeTexture(gl.TEXTURE1);
             gl.bindTexture(gl.TEXTURE_2D, this.texture1);
+            gl.uniform1i(gl.getUniformLocation(shaderProgram, "uTextureDay"), 0);
+            gl.uniform1i(gl.getUniformLocation(shaderProgram, "uTextureNight"), 1);
+
+
         }
 
         // Send our matrices to the shader
