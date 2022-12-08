@@ -9,7 +9,7 @@ varying vec3 vWorldPosition;
 
 void main(void) {
     float speedFactor = 45.0;
-    float brightFactor = 0.17;
+    float brightFactor = 0.2;
     float periodFactor = 0.20;
 
     float xStripe = (cos((vWorldPosition.x + (uTime * speedFactor)) * periodFactor) + 5.0) * brightFactor;
@@ -19,8 +19,10 @@ void main(void) {
     float checker = xStripe * yStripe * zStripe;
 
     vec3 albedo = texture2D(uTexture, vTexcoords.xy).rgb;
+    vec3 ambient = albedo * 0.70;
 
-    gl_FragColor = vec4(albedo + albedo*checker, 1.0);
+
+    gl_FragColor = vec4(ambient + albedo*checker, 1.0);
 }
 
 // EOF 00100001-10
