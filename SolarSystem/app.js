@@ -411,7 +411,7 @@ function updateAndRender() {
     planets.earth.worldMatrix.makeIdentity();
     planets.earth.worldMatrix.multiply(orbit).multiply(translation).multiply(localSpin).multiply(scale);
 
-    scale.makeScale(scaleFactor * diameters.earth + 0.02, scaleFactor * diameters.earth + 0.01, scaleFactor * diameters.earth + 0.02);
+    scale.makeScale(scaleFactor * diameters.earth + 0.015, scaleFactor * diameters.earth + 0.015, scaleFactor * diameters.earth + 0.015);
     clouds.worldMatrix.makeIdentity();
     clouds.worldMatrix.multiply(orbit).multiply(translation).multiply(localSpin).multiply(scale);
     
