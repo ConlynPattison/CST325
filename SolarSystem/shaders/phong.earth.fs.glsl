@@ -2,7 +2,8 @@ precision mediump float;
 
 uniform vec3 uLightPosition;
 uniform vec3 uCameraPosition;
-uniform sampler2D uTexture;
+uniform sampler2D uTextureDay;
+uniform sampler2D uTextureNight;
 uniform float uAlpha;
 
 varying vec2 vTexcoords;
@@ -19,18 +20,18 @@ void main(void) {
     float phongTerm = pow(max(dot(normalizedReflectionVector, surfaceToEye), 0.0), 64.0);
     vec3 materialLightPhong = vec3(0.3, 0.3, 0.3) * phongTerm;
 
-    vec3 materialLight = texture2D(uTexture, vTexcoords).rgb;
+    vec3 materialLight = texture2D(uTextureDay, vTexcoords).rgb;
     materialLight = max(materialLight * lambertTerm, 0.0);
 
 
-    vec3 albedo = texture2D(uTexture, vTexcoords).rgb;
+    vec3 albedo = texture2D(uTextureNight, vTexcoords).rgb;
     vec3 ambient = albedo * 0.5;
     vec3 diffuseColor = materialLight;
     vec3 specularColor = materialLightPhong;
 
     vec3 finalColor = ambient + diffuseColor + specularColor;
 
-    gl_FragColor = vec4(diffuseColor, uAlpha);
+    gl_FragColor = vec4(ambient, uAlpha);
 }
 
 // EOF 00100001-10

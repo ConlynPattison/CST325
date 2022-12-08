@@ -93,6 +93,7 @@ var lightPosition = new Vector3(0, 0, 0);
 var phongShaderProgram;
 var flatColorShaderProgram;
 var emissiveShaderProgram;
+var earthShaderProgram;
 
 // auto start the app when the html page is ready
 window.onload = window['initializeAndStartRendering'];
@@ -169,6 +170,8 @@ function loadAssets(onLoadedCB) {
         loadImage('./data/moon.png'),
         loadImage('./data/earthNight.jpg'),
         loadImage('./data/earthClouds.jpg'),
+        fetch('./shaders/phong.earth.vs.glsl').then((response) => { return response.text(); }),
+        fetch('./shaders/phong.earth.fs.glsl').then((response) => { return response.text(); }),
 
 
     ];
@@ -199,6 +202,9 @@ function loadAssets(onLoadedCB) {
         loadedAssets.moonImage = values[21];
         loadedAssets.earthNightImage = values[22];
         loadedAssets.earthCloudsImage = values[23];
+        loadedAssets.earthTextVS = values[24];
+        loadedAssets.earthTextFS = values[25];
+
 
     }).catch(function(error) {
         console.error(error.message);
@@ -212,6 +218,7 @@ function createShaders(loadedAssets) {
     phongShaderProgram = createCompiledAndLinkedShaderProgram(loadedAssets.phongTextVS, loadedAssets.phongTextFS);
     flatColorShaderProgram = createCompiledAndLinkedShaderProgram(loadedAssets.flatTextVS, loadedAssets.flatTextFS);
     emissiveShaderProgram = createCompiledAndLinkedShaderProgram(loadedAssets.emissiveVS, loadedAssets.emissiveFS);
+    earthShaderProgram = createCompiledAndLinkedShaderProgram(loadedAssets.earthTextVS, loadedAssets.earthTextFS);
 
     phongShaderProgram.attributes = {
         vertexPositionAttribute: gl.getAttribLocation(phongShaderProgram, "aVertexPosition"),
@@ -227,6 +234,23 @@ function createShaders(loadedAssets) {
         cameraPositionUniform: gl.getUniformLocation(phongShaderProgram, "uCameraPosition"),
         textureUniform: gl.getUniformLocation(phongShaderProgram, "uTexture"),
         alphaUniform: gl.getUniformLocation(phongShaderProgram, "uAlpha")
+    };
+
+    earthShaderProgram.attributes = {
+        vertexPositionAttribute: gl.getAttribLocation(earthShaderProgram, "aVertexPosition"),
+        vertexNormalsAttribute: gl.getAttribLocation(earthShaderProgram, "aNormal"),
+        vertexTexcoordsAttribute: gl.getAttribLocation(earthShaderProgram, "aTexcoords")
+    };
+
+    earthShaderProgram.uniforms = {
+        worldMatrixUniform: gl.getUniformLocation(earthShaderProgram, "uWorldMatrix"),
+        viewMatrixUniform: gl.getUniformLocation(earthShaderProgram, "uViewMatrix"),
+        projectionMatrixUniform: gl.getUniformLocation(earthShaderProgram, "uProjectionMatrix"),
+        lightPositionUniform: gl.getUniformLocation(earthShaderProgram, "uLightPosition"),
+        cameraPositionUniform: gl.getUniformLocation(earthShaderProgram, "uCameraPosition"),
+        textureDayUniform: gl.getUniformLocation(earthShaderProgram, "uTextureDay"),
+        textureNightUniform: gl.getUniformLocation(earthShaderProgram, "uTextureNight"),
+        alphaUniform: gl.getUniformLocation(earthShaderProgram, "uAlpha")
     };
 
     flatColorShaderProgram.attributes = {
@@ -275,8 +299,8 @@ function createScene() {
     planets.venus = new WebGLGeometryJSON(gl, phongShaderProgram);
     planets.venus.create(loadedAssets.sphereJSON, loadedAssets.venusImage);
 
-    planets.earth = new WebGLGeometryJSON(gl, phongShaderProgram);
-    planets.earth.create(loadedAssets.sphereJSON, loadedAssets.earthImage);
+    planets.earth = new WebGLGeometryJSON(gl, earthShaderProgram);
+    planets.earth.create(loadedAssets.sphereJSON, loadedAssets.earthImage, loadedAssets.earthNightImage);
 
     planets.mars = new WebGLGeometryJSON(gl, phongShaderProgram);
     planets.mars.create(loadedAssets.sphereJSON, loadedAssets.marsImage);
@@ -466,7 +490,7 @@ function updateAndRender() {
 
     planets.mercury.render(camera, projectionMatrix, phongShaderProgram);
     planets.venus.render(camera, projectionMatrix, phongShaderProgram);
-    planets.earth.render(camera, projectionMatrix, phongShaderProgram);
+    planets.earth.render(camera, projectionMatrix, earthShaderProgram);
     planets.mars.render(camera, projectionMatrix, phongShaderProgram);
     planets.jupiter.render(camera, projectionMatrix, phongShaderProgram);
     planets.saturn.render(camera, projectionMatrix, phongShaderProgram);

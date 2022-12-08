@@ -7,7 +7,7 @@ function WebGLGeometryJSON(gl) {
 	this.alpha = 1;
 
 	// -----------------------------------------------------------------------------
-	this.create = function(jsonFileData, rawImage) {
+	this.create = function(jsonFileData, rawImage0, rawImage1) {
         // fish out references to relevant data pieces from 'data'
         var verts = jsonFileData.meshes[0].vertices;
         var normals = jsonFileData.meshes[0].normals;
@@ -34,9 +34,9 @@ function WebGLGeometryJSON(gl) {
         // store all of the necessary indexes into the buffer for rendering later
         this.indexCount = indices.length;
 
-        if (rawImage) {
-            this.texture = this.gl.createTexture();
-            this.gl.bindTexture(gl.TEXTURE_2D, this.texture);
+        if (rawImage0) {
+            this.texture0 = this.gl.createTexture();
+            this.gl.bindTexture(gl.TEXTURE_2D, this.texture0);
             this.gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
             this.gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
             this.gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
@@ -45,7 +45,23 @@ function WebGLGeometryJSON(gl) {
             this.gl.texImage2D(
                 this.gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,
                 this.gl.UNSIGNED_BYTE,
-                rawImage
+                rawImage0
+            );
+            this.gl.bindTexture(gl.TEXTURE_2D, null);
+        }
+
+        if (rawImage1) {
+            this.texture1 = this.gl.createTexture();
+            this.gl.bindTexture(gl.TEXTURE_2D, this.texture1);
+            this.gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+            this.gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+            this.gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+            this.gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            this.gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            this.gl.texImage2D(
+                this.gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,
+                this.gl.UNSIGNED_BYTE,
+                rawImage1
             );
             this.gl.bindTexture(gl.TEXTURE_2D, null);
         }
@@ -97,9 +113,14 @@ function WebGLGeometryJSON(gl) {
 
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
 
-        if (this.texture) {
+        if (this.texture0) {
             gl.activeTexture(gl.TEXTURE0);
-            gl.bindTexture(gl.TEXTURE_2D, this.texture);
+            gl.bindTexture(gl.TEXTURE_2D, this.texture0);
+        }
+
+        if (this.texture1) {
+            gl.activeTexture(gl.TEXTURE1);
+            gl.bindTexture(gl.TEXTURE_2D, this.texture1);
         }
 
         // Send our matrices to the shader
@@ -110,7 +131,8 @@ function WebGLGeometryJSON(gl) {
 
         gl.drawElements(gl.TRIANGLES, this.indexCount, gl.UNSIGNED_SHORT, 0);
 
-        this.texture && gl.bindTexture(gl.TEXTURE_2D, null);
+        this.texture0 && gl.bindTexture(gl.TEXTURE_2D, null);
+        this.texture1 && gl.bindTexture(gl.TEXTURE_2D, null);
         gl.disableVertexAttribArray(attributes.vertexPositionAttribute);
         attributes.vertexNormalsAttribute && gl.disableVertexAttribArray(attributes.vertexNormalsAttribute);
         attributes.vertexTexcoordsAttribute && gl.disableVertexAttribArray(attributes.vertexTexcoordsAttribute);
