@@ -11,11 +11,11 @@ void main(void) {
     float brightFactor = 0.17;
     float periodFactor = 0.20;
 
-    float hStripe = (cos((vWorldPosition.x + (uTime * speedFactor)) * periodFactor) + 5.0) * brightFactor;
-    float vStripe = (sin((vWorldPosition.y + (uTime * speedFactor)) * periodFactor)+ 5.0) * brightFactor;
+    float xStripe = (cos((vWorldPosition.x + (uTime * speedFactor)) * periodFactor) + 5.0) * brightFactor;
+    float yStripe = (sin((vWorldPosition.y + (uTime * speedFactor)) * periodFactor)+ 5.0) * brightFactor;
     float zStripe = (cos((vWorldPosition.z + (uTime * speedFactor)) * periodFactor) + 5.0) * brightFactor;
 
-    float checker = hStripe * vStripe * zStripe;
+    float checker = xStripe * yStripe * zStripe;
 
     vec3 albedo = texture2D(uTexture, vTexcoords.xy).rgb;
 
