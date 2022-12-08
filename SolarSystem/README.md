@@ -12,4 +12,4 @@
 * Hold Left-Mouse -> free orbit around focus object
 * Scroll Wheel    -> zoom in / out from focus object
 
-![Algorithm earth] (./data/earth.cs.png)
+![earth](./data/earth.cs.png)
