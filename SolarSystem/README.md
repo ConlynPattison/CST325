@@ -1,5 +1,8 @@
 # Solar System - Final Project
 
+## Technologies
+* Project launched from VS Code using Live Server: v5.7.9
+
 ## Controls
 ### Navigation
 #### Keyboard
