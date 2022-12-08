@@ -23,8 +23,7 @@ var planets = {
     mercury: null, venus: null,
     earth: null, mars: null,
     jupiter: null, saturn: null,
-    uranus: null, neptune: null,
-    moon: null
+    uranus: null, neptune: null
 };
 
 const CUBE_SCALE = 2600.0;
