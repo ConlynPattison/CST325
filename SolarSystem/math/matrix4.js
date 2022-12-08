@@ -1,4 +1,5 @@
 /*
+ * Conlyn Pattison
  * An object representing a 4x4 matrix
  */
 

@@ -1,3 +1,4 @@
+// Conlyn Pattison
 function Input() {
 	this.up = false;
 	this.down = false;

@@ -1,3 +1,4 @@
+// Conlyn Pattison
 // -----------------------------------------------------------------------------
 function loadTextFile(url, callback) {
   var request = new XMLHttpRequest();

@@ -1,3 +1,4 @@
+// Conlyn Pattison
 function Time() {
     this.secondsElapsedSinceStart = 0;
     this.lastTime = 0;

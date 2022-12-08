@@ -1,4 +1,5 @@
 /*
+ * Conlyn Pattison
  * An object representing a 3d vector to make operations simple and concise.
  */
 

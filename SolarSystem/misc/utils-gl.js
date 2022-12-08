@@ -1,3 +1,4 @@
+// Conlyn Pattison
 // -------------------------------------------------------------------------
 function createCompiledShader(gl, shaderText, shaderType) {
     var shader = gl.createShader(shaderType);

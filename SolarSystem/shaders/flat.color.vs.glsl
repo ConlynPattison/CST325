@@ -1,3 +1,4 @@
+// Conlyn Pattison
 precision mediump float;
 
 attribute vec3 aVertexPosition;

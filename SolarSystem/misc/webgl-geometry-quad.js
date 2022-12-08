@@ -1,4 +1,5 @@
 /*
+ * Conlyn Pattison
  * A simple object to encapsulate the data and operations of object rasterization
  */
 function WebGLGeometryQuad(gl) {

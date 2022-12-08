@@ -1,3 +1,4 @@
+// Conlyn Pattison
 precision mediump float;
 
 uniform vec3 uLightPosition;
