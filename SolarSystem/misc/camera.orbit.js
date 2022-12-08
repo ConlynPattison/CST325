@@ -4,7 +4,7 @@ function OrbitCamera(input) {
     this.cameraTarget = new Vector4(0, 0, 0, 1);
     this.yawDegrees = 0;
     this.pitchDegrees = -45;
-    this.minDistance = 100;
+    this.minDistance = 200;
     this.maxDistance = 2500;
     this.zoomScale = 1;
 

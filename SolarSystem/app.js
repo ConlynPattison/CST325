@@ -10,7 +10,7 @@ var camera = new OrbitCamera(appInput);
 var centerVec4 = new Vector4(0, 0, 0, 1);
 var followEarth = false;
 
-const TIME_FACTOR = 500.0;   // Affects the spinning and orbiting speed of objects
+var TIME_FACTOR = 500.0;   // Affects the spinning and orbiting speed of objects
 const SCALE_FACTOR = 0.008;  // Affects object size (planets, atmospheres, moons, sun)
 const DISTANCE_FACTOR = 2.0; // Affects relative object distances from sun (planets, atmospheres, moons, sun)
 const START_ROTATION = 50.0; // Affects starting position of planets (not in sequential order)
@@ -513,17 +513,18 @@ function updateAndRender() {
 
     if (appInput.a) {
         followEarth = true;
+        camera.minDistance = 50.0;
+        TIME_FACTOR = 50.0;
     }
     if (appInput.d) {
         followEarth = false;
         camera.cameraTarget = centerVec4;
+        camera.minDistance = 200.0;
+        TIME_FACTOR = 500.0;
     }
     if (followEarth) {
         camera.cameraTarget = planets.earth.worldMatrix.multiplyVector(centerVec4);
     }
-
-
-
 }
 
 // EOF 00100001-10
