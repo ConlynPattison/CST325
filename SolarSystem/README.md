@@ -12,4 +12,4 @@
 * Hold Left-Mouse -> free orbit around focus object
 * Scroll Wheel    -> zoom in / out from focus object
 
-![earth](https://github.com/ConlynPattison/CST325/blob/main/SolarSystem/earth.sc.png?raw=true))
+![earth](https://github.com/ConlynPattison/CST325/blob/main/SolarSystem/earth.sc.png?raw=true)
