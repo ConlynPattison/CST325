@@ -2,7 +2,6 @@
 precision mediump float;
 
 uniform vec3 uLightPosition;
-uniform vec3 uCameraPosition;
 uniform sampler2D uTextureDay;
 uniform sampler2D uTextureNight;
 uniform float uAlpha;

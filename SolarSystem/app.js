@@ -238,25 +238,19 @@ function createShaders(loadedAssets) {
         viewMatrixUniform: gl.getUniformLocation(earthShaderProgram, "uViewMatrix"),
         projectionMatrixUniform: gl.getUniformLocation(earthShaderProgram, "uProjectionMatrix"),
         lightPositionUniform: gl.getUniformLocation(earthShaderProgram, "uLightPosition"),
-        cameraPositionUniform: gl.getUniformLocation(earthShaderProgram, "uCameraPosition"),
         textureDayUniform: gl.getUniformLocation(earthShaderProgram, "uTextureDay"),
         textureNightUniform: gl.getUniformLocation(earthShaderProgram, "uTextureNight"),
         alphaUniform: gl.getUniformLocation(earthShaderProgram, "uAlpha")
     };
 
     flatColorShaderProgram.attributes = {
-        vertexPositionAttribute: gl.getAttribLocation(flatColorShaderProgram, "aVertexPosition"),
-        vertexNormalsAttribute: gl.getAttribLocation(flatColorShaderProgram, "aNormal"),
-        vertexTexcoordsAttribute: gl.getAttribLocation(flatColorShaderProgram, "aTexcoords")
+        vertexPositionAttribute: gl.getAttribLocation(flatColorShaderProgram, "aVertexPosition")
     };
 
     flatColorShaderProgram.uniforms = {
         worldMatrixUniform: gl.getUniformLocation(flatColorShaderProgram, "uWorldMatrix"),
         viewMatrixUniform: gl.getUniformLocation(flatColorShaderProgram, "uViewMatrix"),
-        projectionMatrixUniform: gl.getUniformLocation(flatColorShaderProgram, "uProjectionMatrix"),
-        lightPositionUniform: gl.getUniformLocation(flatColorShaderProgram, "uLightPosition"),
-        cameraPositionUniform: gl.getUniformLocation(flatColorShaderProgram, "uCameraPosition"),
-        textureUniform: gl.getUniformLocation(flatColorShaderProgram, "uTexture"),
+        projectionMatrixUniform: gl.getUniformLocation(flatColorShaderProgram, "uProjectionMatrix")
     };
 
     emissiveShaderProgram.attributes = {
@@ -270,7 +264,6 @@ function createShaders(loadedAssets) {
         viewMatrixUniform: gl.getUniformLocation(emissiveShaderProgram, "uViewMatrix"),
         projectionMatrixUniform: gl.getUniformLocation(emissiveShaderProgram, "uProjectionMatrix"),
         lightPositionUniform: gl.getUniformLocation(emissiveShaderProgram, "uLightPosition"),
-        cameraPositionUniform: gl.getUniformLocation(emissiveShaderProgram, "uCameraPosition"),
         textureUniform: gl.getUniformLocation(emissiveShaderProgram, "uTexture"),
         timeUniform: gl.getUniformLocation(emissiveShaderProgram, "uTime")
 
@@ -328,41 +321,41 @@ function createScene() {
 
     cube.top = new WebGLGeometryQuad(gl, emissiveShaderProgram);
     cube.top.create(loadedAssets.skyImage);
-    scale = new Matrix4().makeScale(CUBE_SCALE, CUBE_SCALE, CUBE_SCALE);
-    rotation = new Matrix4().makeRotationX(90);
-    translation = new Matrix4().makeTranslation(0.0, CUBE_SCALE, 0.0, 0.0);
+    scale.makeScale(CUBE_SCALE, CUBE_SCALE, CUBE_SCALE);
+    rotation.makeRotationX(90);
+    translation.makeTranslation(0.0, CUBE_SCALE, 0.0, 0.0);
     cube.top.worldMatrix.makeIdentity();
     cube.top.worldMatrix.multiply(translation).multiply(rotation).multiply(scale);
 
     cube.side1 = new WebGLGeometryQuad(gl, emissiveShaderProgram);
     cube.side1.create(loadedAssets.skyImage);
-    scale = new Matrix4().makeScale(CUBE_SCALE, CUBE_SCALE, CUBE_SCALE);
-    rotation = new Matrix4().makeRotationX(0);
-    translation = new Matrix4().makeTranslation(0.0, 0.0, -CUBE_SCALE, 0.0);
+    scale.makeScale(CUBE_SCALE, CUBE_SCALE, CUBE_SCALE);
+    rotation.makeRotationX(0);
+    translation.makeTranslation(0.0, 0.0, -CUBE_SCALE, 0.0);
     cube.side1.worldMatrix.makeIdentity();
     cube.side1.worldMatrix.multiply(translation).multiply(rotation).multiply(scale);
 
     cube.side2 = new WebGLGeometryQuad(gl, emissiveShaderProgram);
     cube.side2.create(loadedAssets.skyImage);
-    scale = new Matrix4().makeScale(CUBE_SCALE, CUBE_SCALE, CUBE_SCALE);
-    rotation = new Matrix4().makeRotationX(180);
-    translation = new Matrix4().makeTranslation(0.0, 0.0, CUBE_SCALE, 0.0);
+    scale.makeScale(CUBE_SCALE, CUBE_SCALE, CUBE_SCALE);
+    rotation.makeRotationX(180);
+    translation.makeTranslation(0.0, 0.0, CUBE_SCALE, 0.0);
     cube.side2.worldMatrix.makeIdentity();
     cube.side2.worldMatrix.multiply(translation).multiply(rotation).multiply(scale);
 
     cube.side3 = new WebGLGeometryQuad(gl, emissiveShaderProgram);
     cube.side3.create(loadedAssets.skyImage);
-    scale = new Matrix4().makeScale(CUBE_SCALE, CUBE_SCALE, CUBE_SCALE);
-    rotation = new Matrix4().makeRotationY(90);
-    translation = new Matrix4().makeTranslation(-CUBE_SCALE, 0.0, 0.0, 0.0);
+    scale.makeScale(CUBE_SCALE, CUBE_SCALE, CUBE_SCALE);
+    rotation.makeRotationY(90);
+    translation.makeTranslation(-CUBE_SCALE, 0.0, 0.0, 0.0);
     cube.side3.worldMatrix.makeIdentity();
     cube.side3.worldMatrix.multiply(translation).multiply(rotation).multiply(scale);
 
     cube.side4 = new WebGLGeometryQuad(gl, emissiveShaderProgram);
     cube.side4.create(loadedAssets.skyImage);
-    scale = new Matrix4().makeScale(CUBE_SCALE, CUBE_SCALE, CUBE_SCALE);
-    rotation = new Matrix4().makeRotationY(-90);
-    translation = new Matrix4().makeTranslation(CUBE_SCALE, 0.0, 0.0, 0.0);
+    scale.makeScale(CUBE_SCALE, CUBE_SCALE, CUBE_SCALE);
+    rotation.makeRotationY(-90);
+    translation.makeTranslation(CUBE_SCALE, 0.0, 0.0, 0.0);
     cube.side4.worldMatrix.makeIdentity();
     cube.side4.worldMatrix.multiply(translation).multiply(rotation).multiply(scale);
 }
