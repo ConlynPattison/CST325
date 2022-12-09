@@ -19,10 +19,10 @@ void main(void) {
     float checker = xStripe * yStripe * zStripe;
 
     vec3 albedo = texture2D(uTexture, vTexcoords.xy).rgb;
-    vec3 ambient = albedo * 0.70;
+    vec3 base = albedo * 0.70;
 
 
-    gl_FragColor = vec4(ambient + albedo*checker, 1.0);
+    gl_FragColor = vec4(base + albedo*checker, 1.0);
 }
 
 // EOF 00100001-10
