@@ -35,7 +35,7 @@ var cube = {
 
 const SMALL_BIAS = 3.5;
 const DIAMETERS = {  // diameter, thousand miles (altered beyond reality for ease of viewing)
-    sun: 120.0,
+    sun: 140.0,
     mercury: 3.0 * SMALL_BIAS,
     venus: 7.5 * SMALL_BIAS,
     earth: 7.9 * SMALL_BIAS,
